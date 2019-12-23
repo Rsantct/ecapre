@@ -3,7 +3,6 @@
     50 100 156 220 311 440 622 880 1250 1750 2500 3500 5000 10000 20000
 """
 
-from math import log10
 import yaml
 import sys
 from os.path import expanduser
