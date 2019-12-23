@@ -39,9 +39,9 @@ Fortunatelly **madhatter68** has done a great work:
 
 ### LADSPA plugins:
 
-  - shw
-  - caps
-  - fil-plugins
+  - **caps.so**: the CAPS package (**the C* Audio Plugin Suite**)
+  - **filters.so**: the FIL plugin from **Fons Adriaensen**
+  - **mbeq_1197.so**: from **Steve Harris**'s swh plugins package
 
 Under Linux simply use your package management tool
 
