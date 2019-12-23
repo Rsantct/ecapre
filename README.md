@@ -33,11 +33,12 @@ Fortunatelly **madhatter68** has done a great work:
 
 ### LADSPA plugins:
 
+  - shw
+  - caps
+  - fil-plugins
+
 Under Linux simply use your package management tool
 
 Under Mac OS you need to compile from source. We provide binaries here under `lib/ladspa`
 
-  - shw
-  - caps
-  - fil-plugins
 
