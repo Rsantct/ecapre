@@ -3,6 +3,7 @@
     50 100 156 220 311 440 622 880 1250 1750 2500 3500 5000 10000 20000
 """
 
+from math import log10
 import yaml
 import sys
 from os.path import expanduser
@@ -78,6 +79,7 @@ def mbeq_bypass(mode):
     for chain in ('L', 'R'):
         eca.set_cop_bypass( chain, THIS_PG_NAME, mode)
 
+
 ### MBEQ CURVE FOR +13dB LOUDNESS COMPENSATION
 PARAMS13dB = read_mbeq_yml( f'{UHOME}/ecapre/share/eq/mbeq_loud_compens_+13dB.yml' )
 
@@ -90,9 +92,10 @@ if __name__ == '__main__':
             print(__doc__)
             exit()
 
-        # Bypass management
+        # Bypass management (notice: 'on' here means 'bypass-off')
         elif sys.argv[1] in ['on', 'off', 'toggle']:
-            mbeq_bypass(mode=sys.argv[1])
+            mode = {'on':'off', 'off':'on', 'toggle':'toggle'}[ sys.argv[1] ]
+            mbeq_bypass(mode)
 
         # Applying loudness compensation
         elif isFloat(sys.argv[1]):
