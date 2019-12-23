@@ -8,23 +8,28 @@ This project is intended to work on a Mac OS, and of course under a Linux machin
 
 For Mac OS you need to use Homebrew and some tricks.
 
+
 ### Ecasound
 
 On Mac OS install it from Homebrew
+
 
 ### JACK (Jack OSX)
 
 https://jackaudio.org/downloads/
 
+
 ### JackBridge (formerly JackRouter)
 
 JackRouter is the most important tool to enable Mac OS audio to be routed to the Jack audio server.
 
+JACK OS works well, but you need to route your Mac OS application's sound (coreaudio domain) to *ecapre* through by Jack. 
 Unfortunatelly Jack OSX does not support anymore JackRouter.
 
 Fortunatelly **madhatter68** has done a great work:
 
   **https://github.com/madhatter68/JackRouter**
+
 
 ### LADSPA plugins:
 
