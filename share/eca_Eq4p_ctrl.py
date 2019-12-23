@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-    'C* Eq4p - 4-band parametric shelving equaliser' from caps
+    'C* Eq4p - 4-band parametric shelving equaliser'
+    from caps ladspa plugins package
     http://quitte.de/dsp/caps.html#Eq4p
 
     Default settigs from Ecasound's ecapre.ecs file:
@@ -85,19 +86,6 @@ def set_tone(band='bass', gain=0.0, add=False):
         # absolute:
         else:
             params[f'{stage}.gain (dB)'] = gain
-        eca.set_cop(chain, COP_NAME, params)
-
-def set_target(room=4.0, house=2.0):
-    """ applies a {room} gain curve and a negative {house} curve
-    """
-    room_stage  = 'b'
-    house_stage = 'c'
-    for chain in ('L','R'):
-        # get current Eq4p paramenters
-        params = eca.get_cop( chain, COP_NAME )
-        # applies target curves through by 'b' and 'c' stages
-        params[f'{room_stage}.gain (dB)'] = room
-        params[f'{house_stage}.gain (dB)'] = house * -1
         eca.set_cop(chain, COP_NAME, params)
 
 
