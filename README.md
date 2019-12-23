@@ -22,7 +22,9 @@ JackRouter is the most important tool to enable Mac OS audio to be routed to the
 
 Unfortunatelly Jack OSX does not support anymore JackRouter.
 
-  **https://jackaudio.org/downloads/**
+Fortunatelly **madhatter68** has done a great work:
+
+  **https://github.com/madhatter68/JackRouter**
 
 ### LADSPA plugins:
 
