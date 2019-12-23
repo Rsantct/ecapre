@@ -31,13 +31,13 @@ import share.eca_mbeq_ctrl as mbeq
 import share.eca_Eq4p_ctrl as Eq4p
 
 with open(f'{UHOME}/ecapre/ecapre.config', 'r') as f:
-    cfg = yaml.load(f)
+    CFG = yaml.load(f)
 
-HEADROOM         =  cfg['headroom']
-MIN_LOUD_COMPENS =  cfg['min_loud_compens']
-MAX_LOUD_COMPENS =  cfg['max_loud_compens']
-TONE_SPAN        =  cfg['tone_span']
-REF_SPL_GAIN     =  cfg['ref_spl_gain']
+HEADROOM         =  CFG['headroom']
+MIN_LOUD_COMPENS =  CFG['min_loud_compens']
+MAX_LOUD_COMPENS =  CFG['max_loud_compens']
+TONE_SPAN        =  CFG['tone_span']
+REF_SPL_GAIN     =  CFG['ref_spl_gain']
 STATE_FNAME      =  f'{UHOME}/ecapre/.state.yml'
 
 
