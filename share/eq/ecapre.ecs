@@ -49,19 +49,20 @@
 #       d.mode,d.f (Hz),d.Q,d.gain (dB),
 #       _latency
 #
-#   Default settings here:
-#       a: mode=0(lowshelve) Q=.25   102.87  Hz
-#       b: mode=1(band)      Q=.5    529.15  Hz
-#       c: mode=1(band)      Q=.25   529.15  Hz
-#       d: mode=2(hishelve)  Q=.25  2721.78  Hz
-#-a:L -el:Eq4p,0,00102.87,.25,0.0,1,00529.15,.25,0.0,1,00529.15,.50,0.0,2,02721.78,.25,0,0
-#-a:R -el:Eq4p,0,00102.87,.25,0.0,1,00529.15,.25,0.0,1,00529.15,.50,0.0,2,02721.78,.25,0,0
-# --> the ecapre_start.sh script will be in charge of defaults settings
+# (i) The ecapre_start.sh script will be in charge of defaults settings here.
+
 -a:L -el:Eq4p
 -a:R -el:Eq4p
 
 
-### 4th chain operator: Parametric EQ (zita fil ladspa plugin)
+### 4th chain operator: a classic EQ octave band constant Q (~ a grafhic EQ)
+# (i) The ecapre_start.sh script will be in charge of defaults settings here.
+
+-a:L -el:Eq10
+-a:R -el:Eq10
+
+
+### 5th chain operator: Parametric EQ (zita fil ladspa plugin)
 # name:         '4-band parametric filter'
 # unique ID:    '1970'
 # label:        'Parametric1'
