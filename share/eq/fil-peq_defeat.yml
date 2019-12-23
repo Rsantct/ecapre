@@ -1,0 +1,20 @@
+L:
+
+    Filter: 1
+    Gain:   0.0
+                    #N1         #N2         #N3         #N4
+    Section N:      0.0         1.0         0.0         1.0
+    Frequency N:    40.0        80.0        100.0       150.0
+    Bandwidth N:    1.0         1.0         1.0         1.0
+    Gain N:         0.0         0.0         0.0         0.0
+
+R:
+
+    Filter: 1
+    Gain:   0.0
+                    #N1         #N2         #N3         #N4
+    Section N:      0.0         1.0         0.0         1.0
+    Frequency N:    40.0        80.0        100.0       150.0
+    Bandwidth N:    1.0         1.0         1.0         1.0
+    Gain N:         0.0         0.0         0.0         0.0
+

@@ -1,0 +1,26 @@
+# http://quitte.de/dsp/caps.html#Eq4p
+
+# BASS
+a.mode:         lowshelve
+a.Q:            0.25
+a.f (Hz):       150
+a.gain (dB):    0.0
+
+# ROOM GAIN TARGET CURVE
+b.mode:         lowshelve
+b.Q:            .25
+b.f (Hz):       100
+b.gain (dB):    0.0
+
+# HOUSE TARGET CURVE
+c.mode:         band
+c.Q:            0
+c.f (Hz):       20000
+c.gain (dB):    0.0
+
+# TREBLE
+d.mode:         hishelve
+d.Q:            0.25
+d.f (Hz):       2500
+d.gain (dB):    0.0
+

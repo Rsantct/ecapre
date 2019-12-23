@@ -1,1 +1,95 @@
+################  ECASOUND CHAINSETUP FILE ######################
+
+# GENERAL
+
+-n:"pe.audio.sys" -B:rtlowlatency -X -z:intbuf -z:noxruns -z:nopsr -z:mixmode,avg
+
+# AUDIO INPUTS
+-a:L    -f:f32_le,1,48000 -i:jack,,
+-a:R    -f:f32_le,1,48000 -i:jack,,
+#-a:L -i:jack,,
+#-a:R -i:jack,,
+
+# AUDIO OUTPUTS
+-a:L    -f:f32_le,1,48000 -o:jack,,
+-a:R    -f:f32_le,1,48000 -o:jack,,
+#-a:L -o:jack
+#-a:R -o:jack
+
+# CHAIN OPERATORS AND CONTROLLERS
+
+### 1st chain operator: Amplify
+# An Ecasound integrated preset effect to adjust the preamp level in dB
+# As the wanted 12 dB of HEADROOM, and the wanted -20dB initial level:
+-a:L    -eadb:-32.0
+-a:R    -eadb:-32.0
+
+### 2nd chain operator: Loudness compensation EQ
+# http://plugin.org.uk/ladspa-swh/docs/ladspa-swh.html
+# 2.71  Multiband EQ (mbeq, 1197)
+# This is a fairly typical multiband graphical equalizer.
+# It's implemented using a FFT, so it takes quite a lot of CPU power,
+# but should have less phase effects than an equivalent filter implementation.
+# If the input signal is at too low a sample rate then the top bands will be ignored,
+# the highest useful band will always be a high shelf.
+
+-a:L -el:mbeq
+-a:R -el:mbeq
+
+### 3th chain operator: A tone EQ
+# 4-band parametric shelving equaliser
+# name: 'C* Eq4p - 4-band parametric shelving equaliser'
+# label: 'Eq4p'
+# url: http://quitte.de/dsp/caps.html#Eq4p
+#
+#   copp-list:
+#       a.mode,a.f (Hz),a.Q,a.gain (dB),
+#       b.mode,b.f (Hz),b.Q,b.gain (dB),
+#       c.mode,c.f (Hz),c.Q,c.gain (dB),
+#       d.mode,d.f (Hz),d.Q,d.gain (dB),
+#       _latency
+#
+#   Default settings here:
+#       a: mode=0(lowshelve) Q=.25   102.87  Hz
+#       b: mode=1(band)      Q=.5    529.15  Hz
+#       c: mode=1(band)      Q=.25   529.15  Hz
+#       d: mode=2(hishelve)  Q=.25  2721.78  Hz
+#-a:L -el:Eq4p,0,00102.87,.25,0.0,1,00529.15,.25,0.0,1,00529.15,.50,0.0,2,02721.78,.25,0,0
+#-a:R -el:Eq4p,0,00102.87,.25,0.0,1,00529.15,.25,0.0,1,00529.15,.50,0.0,2,02721.78,.25,0,0
+# --> the ecapre_start.sh script will be in charge of defaults settings
+-a:L -el:Eq4p
+-a:R -el:Eq4p
+
+
+### 4th chain operator: Parametric EQ (zita fil ladspa plugin)
+# name:         '4-band parametric filter'
+# unique ID:    '1970'
+# label:        'Parametric1'
+#
+# The parameters list for fil plugin have 18 comma separated elements as follows:
+#
+#   onoffGlobal,gainGlobal,onoff1,freq1,bw1,gain1,onoff2,freq2,bw2,gain2,onoff3,freq3,bw3,gain3,onoff4,freq4,bw4,gain4
+#
+# So to set a single parametric eq (200Hz, bw=2.0, gain=-3.5dB) on the first band we can it define as below.
+# (remain bands are set to 1000Hz but deactivated)
+#
+# If more 4-band stages are needed, just add more '-eli:1970,....' lines ;-)
+
+# Each LADSPA plujin is defined like this:
+#  -el:plugin_unique_name,param-1,...,param-N
+# or
+#  -eli:plugin_unique_number,param-1,...,param-N
+# where the parameters are given as comma separated values with NO spaces.
+#
+# You can get your current settings by issuing the IAM command 'cop-status'
+#   [1]  Filter 1.000, [2] Gain 0.000,
+#   [3]  Section 1 1.000, [4]  Frequency 1 20.000,   [5]  Bandwidth 1 4.000, [6]  Gain 1 -12.000,
+#   [7]  Section 2 0.000, [8]  Frequency 2 1000.000, [9]  Bandwidth 2 1.000, [10] Gain 2 0.000,
+#   [11] Section 3 0.000, [12] Frequency 3 1000.000, [13] Bandwidth 3 1.000, [14] Gain 3 0.000,
+#   [15] Section 4 0.000, [16] Frequency 4 1000.000, [17] Bandwidth 4 1.000, [18] Gain 4 0.000
+
+-a:L    -el:Parametric1
+-a:R    -el:Parametric1
+
+
 
