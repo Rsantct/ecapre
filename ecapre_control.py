@@ -6,7 +6,8 @@
 
         ecapre_control.py [command value] [add]
 
-        Commands:
+        commands:  values:
+        ---------  -------
 
         level       xx (dB)
         balance     xx (dB)
@@ -17,7 +18,7 @@
 
         Use 'add' for relative adjustment
 """
-from math import log10
+
 import yaml
 import sys
 from os.path import expanduser
@@ -29,7 +30,7 @@ from   share.ecanet        import ecanet
 import share.eca_mbeq_ctrl as mbeq
 import share.eca_Eq4p_ctrl as Eq4p
 
-with open('ecapre.config', 'r') as f:
+with open(f'{UHOME}/ecapre/ecapre.config', 'r') as f:
     cfg = yaml.load(f)
 
 HEADROOM         =  cfg['headroom']
@@ -37,6 +38,8 @@ MIN_LOUD_COMPENS =  cfg['min_loud_compens']
 MAX_LOUD_COMPENS =  cfg['max_loud_compens']
 TONE_SPAN        =  cfg['tone_span']
 REF_SPL_GAIN     =  cfg['ref_spl_gain']
+STATE_FNAME      =  f'{UHOME}/ecapre/.state.yml'
+
 
 def isFloat(s):
     try:
@@ -90,7 +93,7 @@ def read_command_line():
 
 def print_state():
 
-    with open(state_fname, 'r') as f:
+    with open(STATE_FNAME, 'r') as f:
         state = yaml.load(f)
 
     line1 = 'Vol:  vvvv  Bal: bbbb  Loud: lll'
@@ -127,9 +130,7 @@ def restore():
 
 if __name__ == '__main__':
 
-    state_fname = '.state.yml'
-
-    with open(state_fname, 'r') as f:
+    with open(STATE_FNAME, 'r') as f:
         state = yaml.load(f)
 
     if sys.argv[1:]:
@@ -204,7 +205,7 @@ if __name__ == '__main__':
             print(__doc__)
 
         # Saving the new settings
-        with open(state_fname, 'w') as f:
+        with open(STATE_FNAME, 'w') as f:
             yaml.dump( state, f, default_flow_style=False )
 
     # If no arguments, print the current settings
