@@ -3,10 +3,9 @@
 echo "(!) REMEMBER TO USE THE CURRENT SAMPLE RATE WHEN STARTING JACKD"
 FS=44100
 
-MYDIR=$(dirname "$0")
 
-# This is for custom installing LADSPA plugins on this directory
-export LADSPA_PATH=$MYDIR/lib/ladspa
+# This is for custom installed LADSPA plugins
+export LADSPA_PATH=$LADSPA_PATH:"${HOME}"/ecapre/lib/ladspa
 
 echo "(i) LADSPA_PATH=""$LADSPA_PATH"
 
@@ -28,7 +27,7 @@ sleep 3
 sleep 3
 
 # JackRouter
-/Users/rafaelsanchez/Downloads/JackBridge/JackBridge &
+"${HOME}"/bin/JackBridge &
 sleep .5
 
 # Ecasound
