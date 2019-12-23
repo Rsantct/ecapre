@@ -9,14 +9,15 @@
         commands:  values:
         ---------  -------
 
-        level       xx (dB)
-        balance     xx (dB)
         loudness    on | off |toggle
-        bass        xx (dB)
-        treble      xx (dB)
         target      room-house (dB-dB)
 
-        Use 'add' for relative adjustment
+        level       xx (dB)
+        balance     xx (dB)
+        bass        xx (dB)
+        treble      xx (dB)
+
+            use 'add' for relative xx adjustment
 """
 
 import yaml
@@ -29,6 +30,7 @@ sys.path.append( f'{UHOME}/ecapre/share' )
 from   share.ecanet        import ecanet
 import share.eca_mbeq_ctrl as mbeq
 import share.eca_Eq4p_ctrl as Eq4p
+import share.eca_Eq10_ctrl as Eq10
 
 with open(f'{UHOME}/ecapre/ecapre.config', 'r') as f:
     CFG = yaml.load(f)
@@ -128,6 +130,9 @@ def restore():
         Eq4p.set_tone('bass',   state['bass'] )
         Eq4p.set_tone('treble', state['treble'] )
 
+        # Target: room_gain and house curves
+        Eq10.apply_target( state['room_gain'], -state['house_curve'] )
+
 if __name__ == '__main__':
 
     with open(STATE_FNAME, 'r') as f:
@@ -189,12 +194,13 @@ if __name__ == '__main__':
             Eq4p.set_tone('treble', dB, relative )
             state['treble'] = dB
 
-        # Target EQ
+        # Target EQ (room_gain and house curves)
         elif cmd == 'target':
             room  = float(arg.split('-')[0])
             house = float(arg.split('-')[1])
-            Eq4p.set_target(room, house )
-            state['target'] = f'{str(round(room,1))} {str(round(house,1))}'
+            Eq10.apply_target(room, house )
+            state['room_gain']   =  round(room,1)
+            state['house_curve'] = -round(house,1)
 
         # Restore last settings from disk file .state.yml
         elif cmd == 'restore':
