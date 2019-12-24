@@ -6,10 +6,10 @@ hi-fi preamp based on ecasound
 
 Features:
 
- - Calibrable volume control for reference SPL, with Loudness compensation
+ - Calibrable volume control for reference SPL, with level dependant Loudness EQ compensation.
  - Bass, Treble, Balance
- - Room gain and House curves
- - Parametric EQ stage for Digital Room Correction purposes
+ - Adjustable 'Room gain' and 'House' curves, for subjective target 'in room' response.
+ - Parametric EQ stage for Digital Room Correction purposes (room modes EQ).
 
 This project is intended to work on a Mac OS, and of course under a Linux machine.
 
