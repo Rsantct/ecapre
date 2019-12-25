@@ -44,7 +44,6 @@ Unfortunatelly JackRouter is not mantained on Jack OSX anymore, but fortunatelly
 
   - **caps.so**: the **CAPS** package (the **C*** **Audio Plugin Suite**)
   - **filters.so**: the FIL plugin from **Fons Adriaensen**
-  - **mbeq_1197.so**: from **Steve Harris**'s swh plugins package
 
 Under Linux simply use your package management tool
 
