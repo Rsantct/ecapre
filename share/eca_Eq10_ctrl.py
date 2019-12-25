@@ -10,13 +10,22 @@
 import yaml
 import sys
 from os.path import expanduser
-
 UHOME=expanduser('~')
 sys.path.append( f'{UHOME}/ecapre/share' )
-
 import ecanet as eca
 
 THIS_PG_NAME = 'C* Eq10 - 10-band equaliser'
+THIS_PLUGIN_COP_IDXS = eca.get_cop_idxs('L', THIS_PG_NAME)
+
+### Eq10 settings for a target curve with room_gain:+6dB and house:-3dB
+fname = f'{UHOME}/ecapre/share/eq/Eq10_target_6-3.yml'
+with open(fname, 'r') as f:
+    PARAMS_6_3 = yaml.load(f)
+
+### Eq10 settings for Loudness curve with 13 dB compensation
+fname = f'{UHOME}/ecapre/share/eq/Eq10_loud_compens_+13dB.yml'
+with open(fname, 'r') as f:
+    PARAMS_LOUD13 = yaml.load(f)
 
 def print_Eq10(params):
     line1 = ''
@@ -28,11 +37,12 @@ def print_Eq10(params):
     print(line1)
     print(line2)
 
-def read_Eq10_yml(fname):
-
-    # loading the YAML --> tmp
-    with open(fname, 'r') as f:
-        return  yaml.load(f)
+def isInt(s):
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False
 
 def isFloat(s):
     try:
@@ -41,34 +51,57 @@ def isFloat(s):
     except ValueError:
         return False
 
-def apply_target( room_gain, house ):
+def bypass_all_Eq10(bpmode):
+    for chain in ('L', 'R'):
+        for cop_idx in eca.get_cop_idxs(chain, THIS_PG_NAME):
+            eca.set_cop_bypass( chain, cop_idx, bpmode )
+
+def apply_target( cop_idx, room_gain, house_atten ):
+
+    # (i) This is a beta implementation.
+    #    It is planned to math here the proper gains
+
+    # Eq10 needs some tuning at 32Hz band to compensate
+    # the low end roll off of this plugin
+    adj_31Hz = 2.0
 
     #  31 Hz,63 Hz,125 Hz,250 Hz,500 Hz,1 kHz,2 kHz,4 kHz,8 kHz,16 kHz
     #  <-----  room gain  -----> <------------  house  -------------->
 
+
     # Getting PARAMS_6_3 as starting point:
     # a target curve with room_gain:+6dB and house:-3dB
+    # We need to apply an experimental offset for this curve
+    # over the house section to work well when scalated.
+    exp_off = 1.0
 
     params = {}
     # lets scale :
     for k in PARAMS_6_3:
-        # Room gain section
+
+        ## Room gain section
         if k in ('31 Hz','63 Hz','125 Hz','250 Hz'):
-            params[k] = room_gain /  6.0 * PARAMS_6_3[k]
+            params[k] = room_gain / 6.0 * PARAMS_6_3[k]
+
         # House section
         else:
-            params[k] = -house    / -3.0 * PARAMS_6_3[k]
+            params[k] = ( -house_atten - exp_off ) / -2.81 * PARAMS_6_3[k]
+
+    # Eq10 needs some tuning at 32Hz band
+    params['31 Hz'] = params['31 Hz'] + adj_31Hz
 
     # and rendering:
     for chain in ('L', 'R'):
-        eca.set_cop(chain, THIS_PG_NAME, params)
+        eca.set_cop(chain, cop_idx, params)
 
-def Eq10_bypass(mode):
+def apply_loudness( cop_idx, loud_level ):
+    params = {}
+    # lets scale:
+    for k in PARAMS_LOUD13:
+        params[k] = loud_level / 13.0 * PARAMS_LOUD13[k]
     for chain in ('L', 'R'):
-        eca.set_cop_bypass( chain, THIS_PG_NAME, mode)
+        eca.set_cop(chain, cop_idx, params)
 
-### Eq10 settings for target curve with room_gain:+6dB and house:-3dB
-PARAMS_6_3 = read_Eq10_yml( f'{UHOME}/ecapre/share/eq/Eq10_target_6-3.yml' )
 
 if __name__ == '__main__':
 
@@ -79,10 +112,27 @@ if __name__ == '__main__':
             print(__doc__)
             exit()
 
-        # Bypass management (notice: 'on' here means 'bypass-off')
-        elif sys.argv[1] in ['on', 'off', 'toggle']:
-            mode = {'on':'off', 'off':'on', 'toggle':'toggle'}[ sys.argv[1] ]
-            Eq10_bypass(mode)
+
+        elif isInt(sys.argv[1]):
+            cop_idx = sys.argv[1]
+
+            # Bypass management (notice: 'on' here means 'bypass-off')
+            if sys.argv[2:] and sys.argv[2] in ('on','off','toggle'):
+                for chain in ('L','R'):
+                    eca.set_cop_bypass( chain, cop_idx,
+                                        mode={ 'on':'off',
+                                               'off':'on',
+                                               'toggle':'toggle'}[ sys.argv[2] ]
+                                       )
+
+            # Printing out the running settigs for the selected cop index
+            for chain in ('L', 'R'):
+                bypassed = ''
+                if eca.get_cop_bypass(chain, cop_idx):
+                    bypassed = '(BYPASSED)'
+                print(f'\n--- chain {chain}, cop# {cop_idx}: {bypassed}')
+                params = eca.get_cop(chain, cop_idx)
+                print_Eq10(params)
 
         # Loading an arbritary curve from a YAML file
         else:
@@ -90,17 +140,7 @@ if __name__ == '__main__':
             params = read_Eq10_yml(Eq10_fname)
             for chain in ('L', 'R'):
                 #print(params) # debug
-                eca.set_cop(chain, THIS_PG_NAME, params)
+                eca.set_cop(chain, cop_idx, params)
 
-
-    # Printing out the running settigs
     else:
-        for chain in ('L', 'R'):
-            bypassed = ''
-            tmp = eca.get_cop_bypass(chain, THIS_PG_NAME).split('\r\n')[1]
-            if int(tmp):
-                bypassed = '(BYPASSED)'
-            print(f'\n--- chain {chain}: {bypassed}')
-            params = eca.get_cop(chain, THIS_PG_NAME)
-            print_Eq10(params)
-
+        print(__doc__)

@@ -4,6 +4,13 @@
     from caps ladspa plugins package
     http://quitte.de/dsp/caps.html#Eq4p
 
+
+    a.mode,a.f (Hz),a.Q,a.gain (dB),
+    b.mode,b.f (Hz),b.Q,b.gain (dB),
+    c.mode,c.f (Hz),c.Q,c.gain (dB),
+    d.mode,d.f (Hz),d.Q,d.gain (dB),
+    _latency
+
     Default settigs from Ecasound's ecapre.ecs file:
 
         a: mode=0(lowshelve) Q=.25   102.87  Hz
@@ -15,13 +22,11 @@
 import yaml
 import sys
 from os.path import expanduser
-
 UHOME=expanduser('~')
 sys.path.append( f'{UHOME}/ecapre/share' )
-
 import ecanet as eca
 
-COP_NAME = 'C* Eq4p - 4-band parametric shelving equaliser'
+THIS_PG_NAME = 'C* Eq4p - 4-band parametric shelving equaliser'
 
 def isFloat(s):
     try:
@@ -32,7 +37,7 @@ def isFloat(s):
 
 def print_Eq4p(params):
     COLW = 12
-    # print(params); return # debug
+    #print(params); return # debug
     line0 = ' '.ljust(COLW)+'[a]'.ljust(COLW)+'[b]'.ljust(COLW)+'[c]'.ljust(COLW)+'[d]'.ljust(COLW)
     lmode = 'mode:'.ljust(COLW)
     lfreq = 'freq:'.ljust(COLW)
@@ -68,17 +73,15 @@ def read_Eq4p_yml(fname):
             params[k] = tmp[k]
     return params
 
-def bypass_Eq4p(mode):
+def bypass_all_Eq4p(bpmode):
     for chain in ('L', 'R'):
-        eca.set_cop_bypass( chain, cop_name=COP_NAME,
-                            mode={ 'on':'off',
-                                   'off':'on',
-                                   'toggle':'toggle'}[ mode ] )
+        for cop_idx in eca.get_cop_idxs(chain, THIS_PG_NAME):
+            eca.set_cop_bypass( chain, cop_idx, bpmode )
 
-def set_tone(band='bass', gain=0.0, add=False):
+def set_tone(cop_idx, band='bass', gain=0.0, add=False):
     stage = {'bass':'a', 'treble':'d'}[band]
     for chain in ('L','R'):
-        params = eca.get_cop( chain, COP_NAME )
+        params = eca.get_cop( chain, cop_idx )
         # relative:
         if add:
             curr = float(params[f'{stage}.gain (dB)'])
@@ -86,7 +89,15 @@ def set_tone(band='bass', gain=0.0, add=False):
         # absolute:
         else:
             params[f'{stage}.gain (dB)'] = gain
-        eca.set_cop(chain, COP_NAME, params)
+        eca.set_cop(chain, cop_idx, params)
+
+def apply_room_gain( cop_idx, room_gain ):
+    for chain in ('L','R'):
+        params = eca.get_cop( chain, cop_idx )
+        # Room gain applied at 'b' section
+        params['b.gain (dB)'] = room_gain
+        params['b.Q'] = '0.33'
+        eca.set_cop(chain, cop_idx, params)
 
 
 if __name__ == '__main__':
@@ -98,27 +109,30 @@ if __name__ == '__main__':
             print(__doc__)
             exit()
 
-        # Bypass management
+        # Bypass management (notice: 'on' here means 'bypass-off')
         elif sys.argv[1] in ['on', 'off', 'toggle']:
-            bypass_Eq4p(mode=sys.argv[1])
+            bypass_all_Eq4p( bpmode={ 'on':'off',
+                                      'off':'on',
+                                      'toggle':'toggle'}[ sys.argv[1] ] )
 
         # Loading an arbritary curve from a YAML file
         else:
-            Eq4p_fname = sys.argv[1]
+            Eq4p_fname, cop_idx = sys.argv[1], sys.argv[2]
             params = read_Eq4p_yml(Eq4p_fname)
+            # rendering
             for chain in ('L', 'R'):
                 #print(params) # debug
-                eca.set_cop(chain, COP_NAME, params)
+                eca.set_cop(chain, cop_idx, params)
 
 
     # Printing out the running settigs
     else:
         for chain in ('L', 'R'):
-            bypassed = ''
-            tmp = eca.get_cop_bypass(chain, COP_NAME).split('\r\n')[1]
-            if int(tmp):
-                bypassed = '(BYPASSED)'
-            print(f'\n--- chain {chain}: {bypassed}')
-            params = eca.get_cop(chain, COP_NAME)
-            print_Eq4p(params)
+            for cop_idx in eca.get_cop_idxs(chain, THIS_PG_NAME):
+                bypassed = ''
+                if eca.get_cop_bypass(chain, cop_idx):
+                    bypassed = '(BYPASSED)'
+                print(f'\n--- chain {chain}, cop# {cop_idx}: {bypassed}')
+                params = eca.get_cop(chain, cop_idx)
+                print_Eq4p(params)
 

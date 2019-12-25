@@ -19,24 +19,27 @@ def ecanet(command):
     s.close()
     return data
 
-def get_cop_idx(chain, cop_name):
-    """ retrieves the list index of a cop (chain operator) full name,
+def get_cop_idxs(chain, cop_name):
+    """ retrieves the list indexes of a chain operator (aka cop) full name,
         inside a chain
     """
     ecanet( f'c-select {chain}' )
     tmp = ecanet('cop-list').split('\r\n')
-    # i.e: ['256 37 S', 'Amplify (dB),4-band parametric filter', '', '']
-    tmp = tmp[1].split(',')
+    # i.e: ['256 37 S', 'copName1,copName2,copName3', '', '']
+    cops = tmp[1].split(',')
     try:
-        return tmp.index(cop_name) + 1 # ecasound counts from 1 on
+        idxs = [i for i in range(len(cops)) if cops[i] == cop_name]
+        # ecasound counts from 1 on
+        idxs = [x+1 for x in idxs]
+        return idxs
     except:
         return None
 
-def get_copp_idx(chain, cop_name, copp_name):
-    """ retrieves the index of a cop parameter
+def get_copp_idx(chain, cop_idx, copp_name):
+    """ retrieves the index of a cop parameter (aka copp)
     """
     ecanet( f'c-select   {chain}' )
-    ecanet( f'cop-select { get_cop_idx(chain, cop_name) }' )
+    ecanet( f'cop-select {cop_idx}' )
     tmp = ecanet('copp-list').split('\r\n')
     tmp = tmp[1].split(',')
     try:
@@ -44,13 +47,12 @@ def get_copp_idx(chain, cop_name, copp_name):
     except:
         return None
 
-def get_cop(chain, cop_name):
+def get_cop(chain, cop_idx):
     """ returns a dict of a cop parameters settings
     """
     result = {}
-    cop_idx = get_cop_idx(chain, cop_name)
 
-    # select our chain
+    # select the chain
     ecanet( f'c-select {chain}' )
     # select our cop
     ecanet( f'cop-select {cop_idx}' )
@@ -62,22 +64,20 @@ def get_cop(chain, cop_name):
         result[param_list[i]] = value
     return result
 
-def set_cop(chain, cop_name, params):
+def set_cop(chain, cop_idx, params):
     """ configure cop parameters at runtime
     """
-    cop_idx = get_cop_idx(chain, cop_name)
-    # select our chain
+    # select the chain
     ecanet( f'c-select {chain}' )
     # select the cop
     ecanet( f'cop-select {cop_idx}' )
 
     for p in params:
         # print('setting:', p, '-->', params[p])
-        ecanet( f'copp-select {get_copp_idx(chain, cop_name, p)}' )
+        ecanet( f'copp-select {get_copp_idx(chain, cop_idx, p)}' )
         ecanet( f'copp-set {str(params[p])}' )
 
-def set_cop_bypass(chain, cop_name, mode='toggle'):
-    cop_idx = get_cop_idx(chain, cop_name)
+def set_cop_bypass(chain, cop_idx, mode='toggle'):
     # select our chain
     ecanet( f'c-select {chain}' )
     # select the cop
@@ -85,14 +85,13 @@ def set_cop_bypass(chain, cop_name, mode='toggle'):
     # bypass
     ecanet( f'cop-bypass {mode}' )
 
-def get_cop_bypass(chain, cop_name):
-    cop_idx = get_cop_idx(chain, cop_name)
-    # select our chain
+def get_cop_bypass(chain, cop_idx):
+    # select the chain
     ecanet( f'c-select {chain}' )
     # select the cop
     ecanet( f'cop-select {cop_idx}' )
     # get bypass
-    return ecanet( f'cop-is-bypassed' )
+    return {'0':False, '1':True}[ ecanet( f'cop-is-bypassed' ).split('\r\n')[1] ]
 
 # To command line usage
 if __name__ == '__main__':
