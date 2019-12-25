@@ -8,14 +8,14 @@ a.gain (dB):    0.0
 
 # ROOM GAIN TARGET CURVE
 b.mode:         lowshelve
-b.Q:            .25
+b.Q:            .33
 b.f (Hz):       100
 b.gain (dB):    0.0
 
-# HOUSE TARGET CURVE
+# (not in use)
 c.mode:         band
 c.Q:            0
-c.f (Hz):       20000
+c.f (Hz):       1000
 c.gain (dB):    0.0
 
 # TREBLE

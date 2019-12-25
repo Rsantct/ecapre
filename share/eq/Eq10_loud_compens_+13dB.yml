@@ -1,0 +1,12 @@
+# Eq10 needs some tuning at 32Hz band
+
+31 Hz   :   6.18
+63 Hz   :   4.96
+125 Hz  :   3.60
+250 Hz  :   2.10
+500 Hz  :   0.78
+1 kHz   :   0.0
+2 kHz   :  -0.39
+4 kHz   :  -0.47
+8 kHz   :   0.22
+16 kHz  :   3.50
