@@ -71,9 +71,6 @@ def apply_target( cop_idx, room_gain, house_atten ):
 
     # Getting PARAMS_6_3 as starting point:
     # a target curve with room_gain:+6dB and house:-3dB
-    # We need to apply an experimental offset for this curve
-    # over the house section to work well when scalated.
-    exp_off = 1.0
 
     params = {}
     # lets scale :
@@ -85,7 +82,10 @@ def apply_target( cop_idx, room_gain, house_atten ):
 
         # House section
         else:
-            params[k] = ( -house_atten - exp_off ) / -2.81 * PARAMS_6_3[k]
+            params[k] = -house_atten / -2.81 * PARAMS_6_3[k]
+
+    # Some fine tuning to compensate the Eq10 upper end rise
+    params = upper_end_tuning(params)
 
     # Eq10 needs some tuning at 32Hz band
     params['31 Hz'] = params['31 Hz'] + adj_31Hz
@@ -96,12 +96,26 @@ def apply_target( cop_idx, room_gain, house_atten ):
 
 def apply_loudness( cop_idx, loud_level ):
     params = {}
+
     # lets scale:
     for k in PARAMS_LOUD13:
         params[k] = loud_level / 13.0 * PARAMS_LOUD13[k]
+
+    # Some fine tuning to compensate the Eq10 upper end rise
+    params = upper_end_tuning(params)
+
     for chain in ('L', 'R'):
         eca.set_cop(chain, cop_idx, params)
 
+def upper_end_tuning(params):
+    # Some fine tuning to compensate the Eq10 upper end rise
+    for k in ('1 kHz','2 kHz','4 kHz','8 kHz','16 kHz'):
+        params[k] = params[k] + {   '1 kHz':    -0.10,
+                                    '2 kHz':    -0.30,
+                                    '4 kHz':    -0.65,
+                                    '8 kHz':    -0.65,
+                                    '16 kHz':   -0.25   }[ k ]
+    return params
 
 if __name__ == '__main__':
 
