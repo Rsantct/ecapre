@@ -27,8 +27,7 @@ from os.path import expanduser
 UHOME=expanduser('~')
 sys.path.append( f'{UHOME}/ecapre/share' )
 
-from   share.ecanet        import ecanet
-import share.eca_mbeq_ctrl as mbeq
+import share.ecanet        as eca
 import share.eca_Eq4p_ctrl as Eq4p
 import share.eca_Eq10_ctrl as Eq10
 
@@ -42,7 +41,6 @@ TONE_SPAN        =  CFG['tone_span']
 REF_SPL_GAIN     =  CFG['ref_spl_gain']
 STATE_FNAME      =  f'{UHOME}/ecapre/.state.yml'
 
-
 def isFloat(s):
     try:
         float(s)
@@ -55,21 +53,9 @@ def set_level(chain, dB, balance):
         It works with dB values
     """
     ch_value = dB + REF_SPL_GAIN - HEADROOM + balance/2.0 * {'L':-1, 'R':1}[chain]
-    cmds = [ f'c-select {chain}', f'cop-set 1,1,{str(ch_value)}' ]
+    cmds = [ f'c-select {chain}', f'cop-set {CFG["AMP_COP_IDX"]},1,{str(ch_value)}' ]
     for cmd in cmds:
-        ecanet(cmd)
-
-def get_level(chain):
-    """ This is for the -eadb preset as the first chain operator.
-        It works with dB values
-    """
-    level = None
-    cmd = f'c-select {chain}'
-    ecanet(cmd)
-    cmd = 'cop-get 1,1'
-    tmp = ecanet(cmd).split('\r\n')
-    level = float(tmp[1])
-    return level + HEADROOM
+        eca.ecanet(cmd)
 
 def read_command_line():
 
@@ -98,40 +84,52 @@ def print_state():
     with open(STATE_FNAME, 'r') as f:
         state = yaml.load(f)
 
-    line1 = 'Vol:  vvvv  Bal: bbbb  Loud: lll'
-    line2 = 'Bass: ssss  Treb: tttt '
+    line1 = 'Vol:   vvvv  Bal:   bbbb  Loud: lll'
+    line2 = 'Bass:  ssss  Treb:  tttt'
+    line3 = 'RoomG: rrrr  House: hhhh'
 
-    line1 = line1.replace('vvvv', str(state['level']).ljust(5))
-    line1 = line1.replace('bbbb', str(state['balance']).ljust(5))
+    line1 = line1.replace('vvvv', str(state['level'])).rjust(4)
+    line1 = line1.replace('bbbb', str(state['balance'])).rjust(4)
     line1 = line1.replace('lll', {True:'on', False:'off'}[ state['loudness_track'] ] )
-    line2 = line2.replace('ssss', str(state['bass']).ljust(5))
-    line2 = line2.replace('tttt', str(state['treble']).ljust(5))
+    line2 = line2.replace('ssss', str(state['bass'])).rjust(4)
+    line2 = line2.replace('tttt', str(state['bass'])).rjust(4)
+    line3 = line3.replace('rrrr', str(state['room_gain'])).rjust(4)
+    line3 = line3.replace('hhhh', str(state['house_curve'])).rjust(4)
 
     print(line1)
     print(line2)
+    print(line3)
 
 def restore():
     """ restore last settings from disk file .state.yml
     """
     for chain in ('L','R'):
         print( f'(ecapre_control) restoring [{chain}] from disk file .state.yml' )
+
         # Level
         set_level( chain, state['level'], state['balance'] )
 
         # Setting Loudness level compensation, by following
         # the attenuation dB below level=0dB (reference SPL)
         loud_level = max( min( -state['level'], MAX_LOUD_COMPENS), MIN_LOUD_COMPENS)
-        mbeq.apply_loudness( loud_level )
+        Eq10.apply_loudness( CFG['LOUD_COP_IDX'], loud_level )
 
         # Loudness_track
-        mbeq.mbeq_bypass( {True:'off', False:'on'} [ state['loudness_track'] ] )
+        if not state['loudness_track']:
+            Eq10.apply_loudness( CFG['LOUD_COP_IDX'], 0.0 )
 
         # Tone
-        Eq4p.set_tone('bass',   state['bass'] )
-        Eq4p.set_tone('treble', state['treble'] )
+        Eq4p.set_tone(cop_idx=CFG['TONE_COP_IDX'], band='bass',
+                                                   gain=state['bass'] )
+        Eq4p.set_tone(cop_idx=CFG['TONE_COP_IDX'], band='treble',
+                                                   gain=state['treble'] )
 
         # Target: room_gain and house curves
-        Eq10.apply_target( state['room_gain'], -state['house_curve'] )
+        Eq4p.apply_room_gain( cop_idx = CFG['ROOMG_COP_IDX'],
+                              room_gain = state['room_gain'] )
+        Eq10.apply_target(    cop_idx = CFG['ROOMG_COP_IDX'],
+                              room_gain = 0.0,
+                              house_atten = -state['house_curve'] )
 
 if __name__ == '__main__':
 
@@ -156,7 +154,7 @@ if __name__ == '__main__':
             # Setting Loudness level compensation, by following
             # the attenuation dB below level=0dB (reference SPL)
             loud_level = max( min( -level, MAX_LOUD_COMPENS), MIN_LOUD_COMPENS)
-            mbeq.apply_loudness( loud_level )
+            Eq10.apply_loudness( CFG['LOUD_COP_IDX'], loud_level )
             state['level'] = level
 
         # Balance
@@ -168,12 +166,15 @@ if __name__ == '__main__':
 
         # Loudness_track management
         elif cmd in ('loud', 'loudness'):
-            if 'on' in arg:
-                mbeq.mbeq_bypass('off')
-                state['loudness_track'] = True
-            if 'off' in arg:
-                mbeq.mbeq_bypass('on')
-                state['loudness_track'] = False
+            mode = arg
+            for chain in ('L','R'):
+                if mode == 'on':
+                    loud_level = max( min( -state['level'], MAX_LOUD_COMPENS),
+                                      MIN_LOUD_COMPENS)
+                    Eq10.apply_loudness( CFG['LOUD_COP_IDX'], loud_level )
+                else:
+                    Eq10.apply_loudness( CFG['LOUD_COP_IDX'], 0.0 )
+            state['loudness_track'] = {'on':True, 'off':False}[arg]
 
         # Loudness reference management
         # ** WIP **
@@ -183,7 +184,7 @@ if __name__ == '__main__':
             dB = float(arg)
             # clamp
             dB = max(min(dB, TONE_SPAN), -TONE_SPAN)
-            Eq4p.set_tone('bass', dB, relative )
+            Eq4p.set_tone(CFG['TONE_COP_IDX'], 'bass', dB, relative )
             state['bass'] = dB
 
         # Treble setting
@@ -191,15 +192,17 @@ if __name__ == '__main__':
             dB = float(arg)
             # clamp
             dB = max(min(dB, TONE_SPAN), -TONE_SPAN)
-            Eq4p.set_tone('treble', dB, relative )
+            Eq4p.set_tone(CFG['TONE_COP_IDX'], 'treble', dB, relative )
             state['treble'] = dB
 
         # Target EQ (room_gain and house curves)
         elif cmd == 'target':
-            room  = float(arg.split('-')[0])
+            roomg = float(arg.split('-')[0])
             house = float(arg.split('-')[1])
-            Eq10.apply_target(room, house )
-            state['room_gain']   =  round(room,1)
+            Eq4p.apply_room_gain( CFG['ROOMG_COP_IDX'], roomg )
+            Eq10.apply_target(    CFG['HOUSE_COP_IDX'], room_gain=0.0,
+                                                        house_atten=house )
+            state['room_gain']   =  round(roomg,1)
             state['house_curve'] = -round(house,1)
 
         # Restore last settings from disk file .state.yml

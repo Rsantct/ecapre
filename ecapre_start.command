@@ -3,13 +3,13 @@
 echo "(!) REMEMBER TO USE THE CURRENT SAMPLE RATE WHEN STARTING JACKD"
 FS=44100
 
-# 'Built-in Microphone', 'Built-in Output'
-CAP_DEV='AppleHDAEngineInput:1B,0,1,0:1'
-PBK_DEV='AppleHDAEngineOutput:1B,0,1,1:0'
+### 'Built-in Microphone', 'Built-in Output'
+##CAP_DEV='AppleHDAEngineInput:1B,0,1,0:1'
+##PBK_DEV='AppleHDAEngineOutput:1B,0,1,1:0'
 
-## 'USB Audio CODEC ' (Behringer UCA-202)
-#CAP_DEV='AppleUSBAudioEngine:Burr-Brown from TI              :USB Audio CODEC :14100000:2'
-#PBK_DEV='AppleUSBAudioEngine:Burr-Brown from TI              :USB Audio CODEC :14100000:1'
+# 'USB Audio CODEC ' (Behringer UCA-202)
+CAP_DEV='AppleUSBAudioEngine:Burr-Brown from TI              :USB Audio CODEC :14100000:2'
+PBK_DEV='AppleUSBAudioEngine:Burr-Brown from TI              :USB Audio CODEC :14100000:1'
 
 # This is for custom installed LADSPA plugins
 export LADSPA_PATH=$LADSPA_PATH:"${HOME}"/ecapre/lib/ladspa
@@ -20,19 +20,20 @@ echo "(i) LADSPA_PATH=""$LADSPA_PATH"
 killall -KILL ecasound
 killall -KILL JackBridge
 killall -KILL jackdmp
-killall -KILL qjackctl
+#killall -KILL qjackctl
 
 # Exit if just want to stop
 if [[ $1 == 'stop' ]]; then
     echo "Stopped: Ecasound, JackBridge, Jack."
     exit 0
 fi
-sleep 3
 
 # Jack
-/usr/local/bin/./jackdmp -R -d coreaudio -r "$FS" -p 128 -o 2 -i 2 \
--C  "$CAP_DEV" -P  "$PBK_DEV" &
-sleep 3
+/usr/local/bin/./jackdmp \
+    -R -d coreaudio -r "$FS" -p 128 -o 2 -i 2 \
+    -C  "$CAP_DEV" \
+    -P  "$PBK_DEV" &
+sleep 2.0
 
 # Qjackctl (optional just to check if things runs well)
 #/Applications/Jack/qjackctl.app/Contents/MacOS/qjackctl &
@@ -45,16 +46,17 @@ sleep .5
 # https://github.com/deweller/switchaudio-osx
 SwitchAudioSource -s 'JackBridge'
 
-
 # Ecasound
-ecasound  --server  -s:"${HOME}"/ecapre/share/eq/ecapre.ecs  1>/dev/null 2>&1 &
+ecasound  --server  -s:"${HOME}"/ecapre/share/ecapre.ecs  1>/dev/null 2>&1 &
 sleep 3
 
+# Eq10 needs some tuning at 31Hz band
+"${HOME}"/ecapre/share/Eq10_31Hz.sh 2.0
 
-# Loading Eq4p plugin defaults (tones and target bands)
+# Loading Eq4p plugin defaults (for Tones and Room gain)
+tones_roomg_copID=1
 "${HOME}"/ecapre/share/eca_Eq4p_ctrl.py \
-          "${HOME}"/ecapre/share/eq/Eq4p_default.yml
-
+          "${HOME}"/ecapre/share/eq/Eq4p_default.yml $tones_roomg_copID
 
 # Restoring ecapre status
 "${HOME}"/ecapre/ecapre_control.py restore
