@@ -3,13 +3,13 @@
 echo "(!) REMEMBER TO USE THE CURRENT SAMPLE RATE WHEN STARTING JACKD"
 FS=44100
 
-### 'Built-in Microphone', 'Built-in Output'
-##CAP_DEV='AppleHDAEngineInput:1B,0,1,0:1'
-##PBK_DEV='AppleHDAEngineOutput:1B,0,1,1:0'
+# 'Built-in Microphone', 'Built-in Output'
+CAP_DEV='AppleHDAEngineInput:1B,0,1,0:1'
+PBK_DEV='AppleHDAEngineOutput:1B,0,1,1:0'
 
 # 'USB Audio CODEC ' (Behringer UCA-202)
-CAP_DEV='AppleUSBAudioEngine:Burr-Brown from TI              :USB Audio CODEC :14100000:2'
-PBK_DEV='AppleUSBAudioEngine:Burr-Brown from TI              :USB Audio CODEC :14100000:1'
+#CAP_DEV='AppleUSBAudioEngine:Burr-Brown from TI              :USB Audio CODEC :14100000:2'
+#PBK_DEV='AppleUSBAudioEngine:Burr-Brown from TI              :USB Audio CODEC :14100000:1'
 
 # This is for custom installed LADSPA plugins
 export LADSPA_PATH=$LADSPA_PATH:"${HOME}"/ecapre/lib/ladspa
