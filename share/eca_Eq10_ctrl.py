@@ -108,13 +108,16 @@ def apply_loudness( cop_idx, loud_level ):
         eca.set_cop(chain, cop_idx, params)
 
 def upper_end_tuning(params):
-    # Some fine tuning to compensate the Eq10 upper end rise
+    # Some fine tuning to compensate the Eq10 upper end rise.
+    # Adjust 'totEq10' as per your Eq10 plugins in serie.
+    totEq10 = 2
+
     for k in ('1 kHz','2 kHz','4 kHz','8 kHz','16 kHz'):
-        params[k] = params[k] + {   '1 kHz':    -0.10,
-                                    '2 kHz':    -0.30,
-                                    '4 kHz':    -0.65,
-                                    '8 kHz':    -0.65,
-                                    '16 kHz':   -0.25   }[ k ]
+        params[k] = params[k] + {   '1 kHz':  -0.05 * totEq10,
+                                    '2 kHz':  -0.15 * totEq10,
+                                    '4 kHz':  -0.32 * totEq10,
+                                    '8 kHz':  -0.32 * totEq10,
+                                    '16 kHz': -0.12 * totEq10   }[ k ]
     return params
 
 if __name__ == '__main__':
