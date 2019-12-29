@@ -127,7 +127,7 @@ def restore():
         # Target: room_gain and house curves
         Eq4p.apply_room_gain( cop_idx = CFG['ROOMG_COP_IDX'],
                               room_gain = state['room_gain'] )
-        Eq10.apply_target(    cop_idx = CFG['ROOMG_COP_IDX'],
+        Eq10.apply_target(    cop_idx = CFG['HOUSE_COP_IDX'],
                               room_gain = 0.0,
                               house_atten = -state['house_curve'] )
 
