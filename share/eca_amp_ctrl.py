@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-    An Ecasound integrated preset effect to adjust the preamp level in dB
-    As the wanted 12 dB of HEADROOM, and the wanted -20dB initial level:
-    -a:L    -eadb:-32.0
-    -a:R    -eadb:-32.0
+    Manage the raw level in dBFS at the Ecasound integrated preset effect 'eadb'
+    -a:L    -eadb
+    -a:R    -eadb
+
+    Usage:     eca_amp_ctrl.py  [dBFS]
 
 """
 import yaml
@@ -16,9 +17,8 @@ import ecanet as eca
 with open(f'{UHOME}/ecapre/ecapre.config', 'r') as f:
     CFG = yaml.load(f)
 
-
 def get_level(chain):
-    """ This is for the -eadb preset as chain operator.
+    """ This is for the -eadb preset as a chain operator.
         It works with dB values
     """
     level = None
@@ -29,6 +29,22 @@ def get_level(chain):
     level = float(tmp[1])
     return level
 
+def set_level(chain, dBFS):
+    """ This is for the -eadb preset as the first chain operator.
+        It works with dB values
+    """
+    cmds = [ f'c-select {chain}', f'cop-set {CFG["AMP_COP_IDX"]},1,{str(dBFS)}' ]
+    for cmd in cmds:
+        eca.ecanet(cmd)
+
+def isFloat(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
+
 if __name__ == '__main__':
 
     if sys.argv[1:]:
@@ -38,7 +54,11 @@ if __name__ == '__main__':
             print(__doc__)
             exit()
 
+        elif isFloat(sys.argv[1]):
+            for chain in ('L','R'):
+                set_level(chain, sys.argv[1])
+
     else:
         for chain in ('L','R'):
             lev = get_level(chain)
-            print( f'{chain}, cop# {CFG["AMP_COP_IDX"]}: {lev}' )
+            print( f'chain {chain}, cop# {CFG["AMP_COP_IDX"]}:  {lev} dBFS' )
