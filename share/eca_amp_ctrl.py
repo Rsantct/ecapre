@@ -30,7 +30,7 @@ def get_level(chain):
     return level
 
 def set_level(chain, dBFS):
-    """ This is for the -eadb preset as the first chain operator.
+    """ This is for the -eadb preset as a chain operator.
         It works with dB values
     """
     cmds = [ f'c-select {chain}', f'cop-set {CFG["AMP_COP_IDX"]},1,{str(dBFS)}' ]
