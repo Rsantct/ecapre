@@ -51,7 +51,7 @@ ecasound  --server  -s:"${HOME}"/ecapre/share/ecapre.ecs  1>/dev/null 2>&1 &
 sleep 3
 
 # Eq10 needs some tuning at 31Hz band
-"${HOME}"/ecapre/share/Eq10_31Hz.sh 2.0
+"${HOME}"/ecapre/share/Eq10_31Hz.py 2.0
 
 # Loading Eq4p plugin defaults (for Tones and Room gain)
 tones_roomg_copID=1
