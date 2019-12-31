@@ -20,6 +20,7 @@
             use 'add' for relative xx adjustment
 """
 
+import json
 import yaml
 import sys
 from os.path import expanduser
@@ -135,7 +136,7 @@ def restore():
 def do( command_phrase ):
     cmd, arg, relative = read_command_phrase( command_phrase )
     state = process( cmd, arg, relative )
-    return state.encode()
+    return json.dumps(state).encode()
 
 # Main function for command processing
 def process( cmd, arg, relative ):
