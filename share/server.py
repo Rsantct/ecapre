@@ -155,11 +155,11 @@ if __name__ == "__main__":
         sys.path.append( f'{UHOME}/{path}' )
 
     # MAIN
-    if True:
+    try:
         # https://python-reference.readthedocs.io/en/latest/docs/functions/__import__.html
         MODULE = __import__(service)
         print( f'(server.py) will run \'{service}\' module ...' )
         run_server( host=addr, port=int(port), verbose=verbose )
 
-    #except:
-    #    print( f'(server.py) STOPPED after \'{service}\' module has broken. BYE :-/' )
+    except:
+        print( f'(server.py) STOPPED after \'{service}\' module has broken. BYE :-/' )
