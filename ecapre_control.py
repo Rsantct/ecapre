@@ -104,6 +104,10 @@ def print_state():
 def restore():
     """ restore last settings from disk file .state.yml
     """
+    # Load current status
+    with open(STATE_FNAME, 'r') as f:
+        state = yaml.load(f)
+
     for chain in ('L','R'):
         print( f'(ecapre_control) restoring [{chain}] from disk file .state.yml' )
 
