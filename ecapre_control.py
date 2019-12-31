@@ -57,11 +57,11 @@ def set_level(chain, dB, balance):
     for cmd in cmds:
         eca.ecanet(cmd)
 
-def read_command_line():
+def read_command_phrase(command_phrase):
 
     cmd, arg, relative = None, None, False
 
-    opcs = sys.argv[1:]
+    opcs = command_phrase.split(' ')
 
     if 'add' in opcs:
         relative = True
@@ -131,91 +131,109 @@ def restore():
                               room_gain = 0.0,
                               house_atten = -state['house_curve'] )
 
-if __name__ == '__main__':
+# Interface function to plug this on server.py
+def do( command_phrase ):
+    cmd, arg, relative = read_command_phrase( command_phrase )
+    state = process( cmd, arg, relative )
+    return state.encode()
 
+# Main function for command processing
+def process( cmd, arg, relative ):
+    """ input:  a tuple (command, arg, relative)
+        output: the ecapre state dictionary
+    """
+
+    # Load current status
     with open(STATE_FNAME, 'r') as f:
         state = yaml.load(f)
 
+    # Level adjustment
+    if cmd == 'level' and isFloat(arg):
+
+        if relative:
+            level = state['level'] + float(arg)
+        else:
+            level = float(arg)
+
+        for chain in 'L','R':
+            set_level(chain, level, state['balance'])
+
+        # Setting Loudness level compensation, by following
+        # the attenuation dB below level=0dB (reference SPL)
+        loud_level = max( min( -level, MAX_LOUD_COMPENS), MIN_LOUD_COMPENS)
+        Eq10.apply_loudness( CFG['LOUD_COP_IDX'], loud_level )
+        state['level'] = level
+
+    # Balance
+    elif cmd in ('balance', 'bal'):
+        bal = float(arg)
+        for chain in 'L','R':
+            set_level(chain, state['level'], bal)
+        state['balance'] == bal
+
+    # Loudness_track management
+    elif cmd in ('loud', 'loudness'):
+        mode = arg
+        for chain in ('L','R'):
+            if mode == 'on':
+                loud_level = max( min( -state['level'], MAX_LOUD_COMPENS),
+                                  MIN_LOUD_COMPENS)
+                Eq10.apply_loudness( CFG['LOUD_COP_IDX'], loud_level )
+            else:
+                Eq10.apply_loudness( CFG['LOUD_COP_IDX'], 0.0 )
+        state['loudness_track'] = {'on':True, 'off':False}[arg]
+
+    # Loudness reference management
+    # ** WIP **
+
+    # Bass setting
+    elif cmd == 'bass':
+        dB = float(arg)
+        # clamp
+        dB = max(min(dB, TONE_SPAN), -TONE_SPAN)
+        Eq4p.set_tone(CFG['TONE_COP_IDX'], 'bass', dB, relative )
+        state['bass'] = dB
+
+    # Treble setting
+    elif cmd == 'treble':
+        dB = float(arg)
+        # clamp
+        dB = max(min(dB, TONE_SPAN), -TONE_SPAN)
+        Eq4p.set_tone(CFG['TONE_COP_IDX'], 'treble', dB, relative )
+        state['treble'] = dB
+
+    # Target EQ (room_gain and house curves)
+    elif cmd == 'target':
+        roomg = float(arg.split('-')[0])
+        house = float(arg.split('-')[1])
+        Eq4p.apply_room_gain( CFG['ROOMG_COP_IDX'], roomg )
+        Eq10.apply_target(    CFG['HOUSE_COP_IDX'], room_gain=0.0,
+                                                    house_atten=house )
+        state['room_gain']   =  round(roomg,1)
+        state['house_curve'] = -round(house,1)
+
+    # Restore last settings from disk file .state.yml
+    elif cmd == 'restore':
+        restore()
+
+    # Help
+    elif '-h' in cmd:
+        print(__doc__)
+
+    # Saving the new settings
+    with open(STATE_FNAME, 'w') as f:
+        yaml.dump( state, f, default_flow_style=False )
+
+    return state
+
+# command line use
+if __name__ == '__main__':
+
     if sys.argv[1:]:
 
-        cmd, arg, relative = read_command_line()
-
-        # Level adjustment
-        if cmd == 'level' and isFloat(arg):
-
-            if relative:
-                level = state['level'] + float(arg)
-            else:
-                level = float(arg)
-
-            for chain in 'L','R':
-                set_level(chain, level, state['balance'])
-
-            # Setting Loudness level compensation, by following
-            # the attenuation dB below level=0dB (reference SPL)
-            loud_level = max( min( -level, MAX_LOUD_COMPENS), MIN_LOUD_COMPENS)
-            Eq10.apply_loudness( CFG['LOUD_COP_IDX'], loud_level )
-            state['level'] = level
-
-        # Balance
-        elif cmd in ('balance', 'bal'):
-            bal = float(arg)
-            for chain in 'L','R':
-                set_level(chain, state['level'], bal)
-            state['balance'] == bal
-
-        # Loudness_track management
-        elif cmd in ('loud', 'loudness'):
-            mode = arg
-            for chain in ('L','R'):
-                if mode == 'on':
-                    loud_level = max( min( -state['level'], MAX_LOUD_COMPENS),
-                                      MIN_LOUD_COMPENS)
-                    Eq10.apply_loudness( CFG['LOUD_COP_IDX'], loud_level )
-                else:
-                    Eq10.apply_loudness( CFG['LOUD_COP_IDX'], 0.0 )
-            state['loudness_track'] = {'on':True, 'off':False}[arg]
-
-        # Loudness reference management
-        # ** WIP **
-
-        # Bass setting
-        elif cmd == 'bass':
-            dB = float(arg)
-            # clamp
-            dB = max(min(dB, TONE_SPAN), -TONE_SPAN)
-            Eq4p.set_tone(CFG['TONE_COP_IDX'], 'bass', dB, relative )
-            state['bass'] = dB
-
-        # Treble setting
-        elif cmd == 'treble':
-            dB = float(arg)
-            # clamp
-            dB = max(min(dB, TONE_SPAN), -TONE_SPAN)
-            Eq4p.set_tone(CFG['TONE_COP_IDX'], 'treble', dB, relative )
-            state['treble'] = dB
-
-        # Target EQ (room_gain and house curves)
-        elif cmd == 'target':
-            roomg = float(arg.split('-')[0])
-            house = float(arg.split('-')[1])
-            Eq4p.apply_room_gain( CFG['ROOMG_COP_IDX'], roomg )
-            Eq10.apply_target(    CFG['HOUSE_COP_IDX'], room_gain=0.0,
-                                                        house_atten=house )
-            state['room_gain']   =  round(roomg,1)
-            state['house_curve'] = -round(house,1)
-
-        # Restore last settings from disk file .state.yml
-        elif cmd == 'restore':
-            restore()
-
-        # Help
-        elif '-h' in cmd:
-            print(__doc__)
-
-        # Saving the new settings
-        with open(STATE_FNAME, 'w') as f:
-            yaml.dump( state, f, default_flow_style=False )
+        command_phrase = ' '.join (sys.argv[1:] )
+        cmd, arg, relative = read_command_phrase( command_phrase )
+        dummy = process( cmd, arg, relative )
 
     # If no arguments, print the current settings
     else:
