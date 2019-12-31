@@ -59,25 +59,19 @@ def set_level(chain, dB, balance):
         eca.ecanet(cmd)
 
 def read_command_phrase(command_phrase):
-
     cmd, arg, relative = None, None, False
-
     opcs = command_phrase.split(' ')
-
     if 'add' in opcs:
         relative = True
         opcs.remove('add')
-
     try:
         cmd = opcs[0]
     except:
         raise
-
     try:
         arg = opcs[1]
     except:
         pass
-
     return cmd, arg, relative
 
 def print_state():
@@ -138,7 +132,8 @@ def restore():
 
 # Interface function to plug this on server.py
 def do( command_phrase ):
-    cmd, arg, relative = read_command_phrase( command_phrase )
+    cmd, arg, relative = read_command_phrase( command_phrase
+                                              .replace('\n','').replace('\r','') )
     state = process( cmd, arg, relative )
     return json.dumps(state).encode()
 
