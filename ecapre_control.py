@@ -39,10 +39,13 @@ HEADROOM         =  CFG['headroom']
 MIN_LOUD_COMPENS =  CFG['min_loud_compens']
 MAX_LOUD_COMPENS =  CFG['max_loud_compens']
 TONE_SPAN        =  CFG['tone_span']
+BALANCE_SPAN     =  CFG['balance_span']
 REF_SPL_GAIN     =  CFG['ref_spl_gain']
 STATE_FNAME      =  f'{UHOME}/ecapre/.state.yml'
 
 def isFloat(s):
+    if not s:
+        return False
     try:
         float(s)
         return True
@@ -60,7 +63,9 @@ def set_level(chain, dB, balance):
 
 def read_command_phrase(command_phrase):
     cmd, arg, relative = None, None, False
-    opcs = command_phrase.split(' ')
+    # This is to avoid empty values when there are more
+    # than on space as delimiter inside the command_phrase:
+    opcs = [x for x in command_phrase.split(' ') if x]
     if 'add' in opcs:
         relative = True
         opcs.remove('add')
@@ -147,8 +152,47 @@ def process( cmd, arg, relative ):
     with open(STATE_FNAME, 'r') as f:
         state = yaml.load(f)
 
+    # Mono management
+    if cmd == 'mono':
+
+        # arg can be 'on'|'off'|'toggle'
+        # state options are boolean
+        mono_act = { 'on':      True,
+                     'off':     False,
+                     'toggle':  {True:False, False:True}[state['mono']]
+                  }[arg]
+
+        if mono_act:
+            # !!! WIP !!!
+            pass
+        else:
+            # !!! WIP !!!
+            pass
+
+        state['mono'] = mono_act
+
+    # Mute
+    elif cmd == 'mute':
+        # arg can be 'on'|'off'|'toggle'
+        # state options are boolean
+        muted = {   'on':      True,
+                    'off':     False,
+                    'toggle':  {True:False, False:True}[state['muted']]
+                }[arg]
+        if muted:
+            for chain in 'L','R':
+                cmds = [ f'c-select {chain}',
+                         f'cop-set {CFG["AMP_COP_IDX"]},1,-100' ]
+                for cmd in cmds:
+                    eca.ecanet(cmd)
+        else:
+            for chain in 'L','R':
+                set_level(chain, state['level'], state['balance'])
+
+        state["muted"] = muted
+
     # Level adjustment
-    if cmd == 'level' and isFloat(arg):
+    elif cmd == 'level' and isFloat(arg) and not state["muted"]:
 
         if relative:
             level = state['level'] + float(arg)
@@ -165,42 +209,49 @@ def process( cmd, arg, relative ):
         state['level'] = level
 
     # Balance
-    elif cmd in ('balance', 'bal'):
+    elif cmd in ('balance', 'bal') and isFloat(arg):
         bal = float(arg)
+        if relative:
+            bal = state["balance"] + bal
+        # clamp
+        bal = max(min(bal, BALANCE_SPAN), -BALANCE_SPAN)
         for chain in 'L','R':
             set_level(chain, state['level'], bal)
-        state['balance'] == bal
+        state["balance"] = bal
 
     # Loudness_track management
-    elif cmd in ('loud', 'loudness'):
-        mode = arg
-        for chain in ('L','R'):
-            if mode == 'on':
-                loud_level = max( min( -state['level'], MAX_LOUD_COMPENS),
-                                  MIN_LOUD_COMPENS)
-                Eq10.apply_loudness( CFG['LOUD_COP_IDX'], loud_level )
-            else:
-                Eq10.apply_loudness( CFG['LOUD_COP_IDX'], 0.0 )
-        state['loudness_track'] = {'on':True, 'off':False}[arg]
+    elif cmd in ('loud', 'loudness', 'loudness_track'):
+
+        # arg can be 'on'|'off'|'toggle'
+        # state options are boolean
+        ld_act = { 'on':      True,
+                   'off':     False,
+                   'toggle':  {True:False, False:True}[state['loudness_track']]
+                  }[arg]
+
+        if ld_act:
+            loud_level = max( min( -state['level'], MAX_LOUD_COMPENS),
+                              MIN_LOUD_COMPENS)
+            Eq10.apply_loudness( CFG['LOUD_COP_IDX'], loud_level )
+        else:
+            Eq10.apply_loudness( CFG['LOUD_COP_IDX'], 0.0 )
+
+        state['loudness_track'] = ld_act
 
     # Loudness reference management
-    # ** WIP **
+    elif cmd == 'loudness_ref' and isFloat(arg):
+        # !!!! WIP !!!!
+        pass
 
-    # Bass setting
-    elif cmd == 'bass':
+    # Bass & Treble setting
+    elif cmd in ('bass','treble') and isFloat(arg):
         dB = float(arg)
+        if relative:
+            dB = state[cmd] + dB
         # clamp
         dB = max(min(dB, TONE_SPAN), -TONE_SPAN)
-        Eq4p.set_tone(CFG['TONE_COP_IDX'], 'bass', dB, relative )
-        state['bass'] = dB
-
-    # Treble setting
-    elif cmd == 'treble':
-        dB = float(arg)
-        # clamp
-        dB = max(min(dB, TONE_SPAN), -TONE_SPAN)
-        Eq4p.set_tone(CFG['TONE_COP_IDX'], 'treble', dB, relative )
-        state['treble'] = dB
+        Eq4p.set_tone(CFG['TONE_COP_IDX'], cmd, dB)
+        state[cmd] = dB
 
     # Target EQ (room_gain and house curves)
     elif cmd == 'target':
