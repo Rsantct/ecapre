@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+/*
 # Copyright (c) 2019 Rafael Sánchez
 # This file is part of 'ecapre', a PC based preampiflier.
 #
@@ -15,6 +16,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with 'ecapre'.  If not, see <https://www.gnu.org/licenses/>.
+*/
 
 // importing modules (require) that we want to use
 const http  = require('http');
@@ -91,10 +93,10 @@ http.createServer(function(req, res) {
     //      <script src="js/functions.js"></script>
     //      ... ... ...
     // </head>
-    else if (req.url === '/js/functions.js') {
+    else if (req.url === '/clientside.js') {
         console.log( 'sending application/javascript to the client side' );
         res.writeHead(200,{'content-Type': 'application/javascript'});
-        var jsReadStream = fs.createReadStream(__dirname + '/js/functions.js','utf8');
+        var jsReadStream = fs.createReadStream(__dirname + '/clientside.js','utf8');
         jsReadStream.pipe(res);
     }
 
