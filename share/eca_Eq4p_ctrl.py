@@ -78,17 +78,11 @@ def bypass_all_Eq4p(bpmode):
         for cop_idx in eca.get_cop_idxs(chain, THIS_PG_NAME):
             eca.set_cop_bypass( chain, cop_idx, bpmode )
 
-def set_tone(cop_idx, band='bass', gain=0.0, add=False):
+def set_tone(cop_idx, band='bass', gain=0.0):
     stage = {'bass':'a', 'treble':'d'}[band]
     for chain in ('L','R'):
         params = eca.get_cop( chain, cop_idx )
-        # relative:
-        if add:
-            curr = float(params[f'{stage}.gain (dB)'])
-            params[f'{stage}.gain (dB)'] = curr + gain
-        # absolute:
-        else:
-            params[f'{stage}.gain (dB)'] = gain
+        params[f'{stage}.gain (dB)'] = gain
         eca.set_cop(chain, cop_idx, params)
 
 def apply_room_gain( cop_idx, room_gain ):
