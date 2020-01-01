@@ -16,6 +16,9 @@ export LADSPA_PATH=$LADSPA_PATH:"${HOME}"/ecapre/lib/ladspa
 
 echo "(i) LADSPA_PATH=""$LADSPA_PATH"
 
+# killing the control WEB PAGE server
+pkill -f 'node ecapre'
+
 # killing the control TCP server
 pkill -f 'server.py ecapre_control'
 
@@ -80,3 +83,5 @@ CONTROL_ADDR=$(grep control_addr $HOME/ecapre/ecapre.config | sed s/\ \ */\ /g |
 CONTROL_PORT=$(grep control_port $HOME/ecapre/ecapre.config | sed s/\ \ */\ /g | cut -d' ' -f2)
 "${HOME}"/ecapre/share/server.py ecapre_control "$CONTROL_ADDR" "$CONTROL_PORT" &
 
+# Launching the control WEB PAGE server
+node "${HOME}"/ecapre/share/www/ecapre_node.js &
