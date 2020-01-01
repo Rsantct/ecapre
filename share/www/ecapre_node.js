@@ -41,7 +41,6 @@ function ecapre_socket( cmd_phrase ){
 
     const client = net.createConnection({ port:ECAPRE_LISTENING_PORT,
                                           host:ECAPRE_LISTENING_ADDR },() => {
-
         //console.log('--- connected to server port:9999 :-)');
     });
 
@@ -90,7 +89,7 @@ http.createServer(function(req, res) {
     // Needed to serve the client side JAVASCRIPT source file that is required
     // from the index.html's head section:
     // <head>
-    //      <script src="js/functions.js"></script>
+    //      <script src="clientside.js"></script>
     //      ... ... ...
     // </head>
     else if (req.url === '/clientside.js') {
