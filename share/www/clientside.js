@@ -66,6 +66,10 @@ function page_initiate(){
     // Waits 1 sec, then schedules the auto-update itself:
     // Notice: the function call inside setInterval uses NO brackets)
     setTimeout( setInterval( page_update, auto_update_interval ), 1000);
+
+    // Macros buttons
+    var tmp = control_cmd( 'aux get_macros' );
+    console.log(tmp);
 }
 
 
@@ -74,11 +78,16 @@ function page_update() {
 
     var status = control_cmd('dummy');
 
+    level   = status_decode(status, 'level').toFixed(1);
+    balance = status_decode(status, 'balance');
+    bass    = status_decode(status, 'bass');
+    treble  = status_decode(status, 'treble');
+
     // Level, balance, tone info
-    document.getElementById("levelInfo").innerHTML  =            status_decode(status, 'level');
-    document.getElementById("balInfo").innerHTML    = 'BAL: '  + status_decode(status, 'balance');
-    document.getElementById("bassInfo").innerText   = 'BASS: ' + status_decode(status, 'bass');
-    document.getElementById("trebleInfo").innerText = 'TREB: ' + status_decode(status, 'treble');
+    document.getElementById("levelInfo").innerHTML  =            level;
+    document.getElementById("balInfo").innerHTML    = 'BAL: '  + balance;
+    document.getElementById("bassInfo").innerText   = 'BASS: ' + bass;
+    document.getElementById("trebleInfo").innerText = 'TREB: ' + treble;
 
     // the loudness reference to the slider and the loudness monitor to the meter
     document.getElementById("loud_slider_container").innerText =
@@ -89,14 +98,11 @@ function page_update() {
     //document.getElementById("loud_meter").value    =  loud_measure;
 
     // The selected item on INPUTS, XO, DRC and PEQ
-    document.getElementById("targetSelector").value =            status_decode(status, 'target');
-    document.getElementById("inputsSelector").value =            status_decode(status, 'input');
-    document.getElementById("xoSelector").value     =            status_decode(status, 'xo_set');
-    document.getElementById("drcSelector").value    =            status_decode(status, 'drc_set');
+    //document.getElementById("targetSelector").value =            status_decode(status, 'target');
+    //document.getElementById("inputsSelector").value =            status_decode(status, 'input');
+    //document.getElementById("xoSelector").value     =            status_decode(status, 'xo_set');
+    //document.getElementById("drcSelector").value    =            status_decode(status, 'drc_set');
 
-    // MONO, LOUDNESS buttons text lower case if deactivated ( not used but leaving this code here)
-    //document.getElementById("buttonMono").innerHTML = UpLow( 'mono', status_decode(status, 'mono') );
-    //document.getElementById("buttonLoud").innerHTML = UpLow( 'loud', status_decode(status, 'loudness_track') );
 
     // Highlights activated buttons and related indicators
     if ( status_decode(status, 'muted') == true ) {
