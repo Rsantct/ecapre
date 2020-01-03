@@ -19,7 +19,7 @@
 */
 
 
-// Enable/disable to printout some details
+// Enable or disable to printing out some details
 verbose = false;
 
 
