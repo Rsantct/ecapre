@@ -19,8 +19,6 @@ import os
 from subprocess import Popen
 
 UHOME = os.path.expanduser('~')
-sys.path.append( f'{UHOME}/ecapre/share' )
-
 
 with open(f'{UHOME}/ecapre/ecapre.config', 'r') as f:
     CFG = yaml.load(f)
