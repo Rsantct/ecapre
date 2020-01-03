@@ -20,8 +20,10 @@ from subprocess import Popen
 
 UHOME = os.path.expanduser('~')
 
+
 with open(f'{UHOME}/ecapre/ecapre.config', 'r') as f:
     CFG = yaml.load(f)
+
 
 def isFloat(s):
     if not s:
@@ -76,7 +78,7 @@ def process( cmd, arg ):
                 fname = entrie.name
                 if ( fname[0] in [str(x) for x in range(1,10)] ) and fname[1]=='_':
                     macro_files.append(fname)
-        result = json.dumps(macro_files)
+        result = ','.join(macro_files)
 
     # Run a macro
     if cmd == 'macro':
