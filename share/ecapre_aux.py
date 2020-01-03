@@ -25,8 +25,6 @@ sys.path.append( f'{UHOME}/ecapre/share' )
 with open(f'{UHOME}/ecapre/ecapre.config', 'r') as f:
     CFG = yaml.load(f)
 
-STATE_FNAME      =  f'{UHOME}/ecapre/.state.yml'
-
 def isFloat(s):
     if not s:
         return False
