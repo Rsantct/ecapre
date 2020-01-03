@@ -19,7 +19,9 @@
 */
 
 // HARD WIRED GLOBALS:
-const INDEX_HTML_PATH       = __dirname + '/index.html';
+const INDEX_HTML_PATH = __dirname + '/index.html';
+const CLISIDE_JS_PATH = __dirname + '/clientside.js';
+
 const NODEJS_PORT = 8080;
 
 const ECAPRE_ADDR = 'localhost';
@@ -28,118 +30,111 @@ const ECAPRE_PORT = 9999;
 const AUX_ADDR = 'localhost';
 const AUX_PORT = 9998;
 
-// importing modules (require) that we want to use
+// importing modules (require)
 const http  = require('http');
 const url   = require('url');
 const fs    = require('fs');
 const net   = require('net');
 
-// Here we keep the answers from the ecapre TCP server
-// when issuing any command to him.
-var ecapre_ans = null;
-
-// helper to debug received command_phrases
+// helper to debug http TX and RX chunks
 var last_cmd_phrase = '';
+var last_http_sent  = '';
 
-function ecapre_socket( cmd_phrase, host, port ){
+// This is the MAIN function, it is called from the httpServer
+// when some httpRequest is received.
+function onHttpReq( httpReq, httpRes ){
 
-    const client = net.createConnection({ port:port,
-                                          host:host },() => {
-        //console.log('--- connected to server :-)');
-    });
+    // Serve our HTML code index.html as an http response
+    if (httpReq.url === '/' || httpReq.url === '/index.html') {
 
-    client.on('error', function(err){
-        console.log(err.message);
-    });
+        console.log( '(node) httpServer TX: text/html' );
 
-    client.write( cmd_phrase + '\r\n' );
-    //console.log( '|---> : ', cmd_phrase );
-
-    // a 'received data (aka data)' event handler for the client socket;
-    client.on('data', (data) => {
-        ecapre_ans = data.toString();
-        //console.log( '--->| : ', ecapre_ans );
-    });
-
-    // finishing the socket connection
-    client.end();
-
-    // an informative 'end' event handler for the client socket;
-    client.on('end', () => {
-      //console.log('--- disconnected from server');
-    });
-
-    return ecapre_ans;
-}
-
-
-http.createServer(function(req, res) {
-
-    // Debug the received requests to this server
-    //console.log('--- node.js received a request: ' + req.url);
-
-    // Render our HTML code index.html as an html:// response
-    // when a browser client connects here
-    if (req.url === '/' || req.url === '/index.html') {
-        console.log( 'sending text/html to the client side' );
-        res.writeHeader(200,  { "Content-Type": "text/html" } );
+        httpRes.writeHead(200,  {'Content-Type': 'text/html'} );
         fs.readFile(INDEX_HTML_PATH, 'utf8', (err,data) => {
             if (err) throw err;
-            res.write(data);
-            res.end();
+            httpRes.write(data);
+            httpRes.end();
         });
     }
 
-    // Needed to serve the client side JAVASCRIPT source file that is required
-    // from the index.html's head section:
-    // <head>
-    //      <script src="clientside.js"></script>
-    //      ... ... ...
-    // </head>
-    else if (req.url === '/clientside.js') {
-        console.log( 'sending application/javascript to the client side' );
-        res.writeHead(200,{'content-Type': 'application/javascript'});
-        var jsReadStream = fs.createReadStream(__dirname + '/clientside.js','utf8');
-        jsReadStream.pipe(res);
+    // Serve the JAVASCRIPT source file refered from index.html's <src=...>
+    else if (httpReq.url === '/clientside.js') {
+
+        console.log( '(node) httpServer TX: application/javascript' );
+
+        httpRes.writeHead(200, {'Content-Type': 'application/javascript'});
+        fs.readFile(CLISIDE_JS_PATH, 'utf8', (err,data) => {
+            if (err) throw err;
+            httpRes.write(data);
+            httpRes.end();
+        });
     }
 
-    // Here we try to PROCESS A CLIENT QUERY by reading the key 'command'
-    // previously parsed from the query part of the raw url, for instance:
-    //      http://localhost:8080/?command=level%203%20add
-    // the raw url is:   '/?command=level%203%20add'
-    // after parsing it, we can use the key 'command' through by 'q.command',
-    // then we can pass the wanted command 'level 3 add' to the ecapre socket
-    else {
-        var q = url.parse(req.url, true).query;
-        var cmd_phrase = q.command;
+    // processing a CLIENT QUERY (url = /?xxxxx)
+    else if (httpReq.url.slice(0,2) === '/?'){
+
+        let q = url.parse(httpReq.url, true).query;
+        let cmd_phrase = q.command;
+        let cli_addr, cli_port;
+
 
         if ( cmd_phrase ){
 
-            // monitoring received commands, but no repeating :-)
+            // debugging received commands but no repeating :-)
             if (last_cmd_phrase !== cmd_phrase){
-                console.log('received command=' + cmd_phrase);
+                console.log('(node) httpServer RX: /?command=' + cmd_phrase);
                 last_cmd_phrase = cmd_phrase;
             }
 
-            // pass the command phrase to the related socket:
-
-            // If prefix 'aux', remove prefix and send to the AUX server
+            // if prefix 'aux', remove prefix and point to the AUX server
             if ( cmd_phrase.split(' ')[0] == 'aux' ){
-                var tmp = cmd_phrase.split(' ').slice(1)
+                cmd_phrase = cmd_phrase.split(' ').slice(1)
                                                 .toString()
                                                   .replace(',',' ');
-                var ans = ecapre_socket( tmp, AUX_ADDR, AUX_PORT );
-            }
-            // else: a regular preamp command will be sent to the ECAPRE server
-            else {
-                var ans = ecapre_socket( cmd_phrase, ECAPRE_ADDR, ECAPRE_PORT );
-            }
-        }
-        // And finally we pass the ecapre_control response to the http client side
-        // while ending the http response.
-        res.end(ans);
-    }
+                cli_addr = AUX_ADDR;
+                cli_port = AUX_PORT;
 
-}).listen( NODEJS_PORT );
+            }
+            // else: a regular preamp will point to the ECAPRE server
+            else {
+                cli_addr = ECAPRE_ADDR;
+                cli_port = ECAPRE_PORT;
+            }
+
+            // A socket client to ECAPRE(9999) or AUX(9998) TCP servers
+            const client = net.createConnection( { port:cli_port,host:cli_addr },
+                                                 () => {
+
+                client.write( cmd_phrase + '\r\n' );
+
+                // The key handler: receiving data
+                client.on('data', (data) => {
+
+                    const ans = data.toString();
+
+                    client.end();
+
+                    // (!) Important to write and end the httpResponse
+                    //     here INSIDE the client.on('data') HANDLER
+                    //     because of the handler (and all JS) is asynchronous
+                    httpRes.writeHead(200, {'Content-Type':'text/plain'});
+                    if (ans){
+                        httpRes.write(ans);
+                        // debugging sent chunks but no repeating :-)
+                        if (last_http_sent !== ans){
+                            console.log( '(node) httpServer TX: ' + ans.slice(0,40) + '...'  );
+                            last_http_sent = ans;
+                        }
+                    }
+                    httpRes.end();
+                });
+            });
+        }
+    }
+}
+
+// Starts an HTTP SERVER, which automagically will trigger
+// a function when a 'request' event occurs.
+http.createServer( onHttpReq ).listen( NODEJS_PORT );
 
 console.log('Server running at http://localhost:' + NODEJS_PORT + '/');
