@@ -332,28 +332,6 @@
                 <button type="button"                 onmousedown="control_cmd('bass   +1 add')"  >+</button>
             </td>
             <td id="target">
-                <span>
-                <select id="targetSelector"  onchange="set_target(this.value)" ></select>
-                </span>
-            </td>
-        </tr>
-    </table>
-    <table id="eq_table">
-        <tr>
-            <td id="xo">
-                <span>XO:
-                <select id="xoSelector"     onchange="control_cmd('xo ' + this.value, update=false)" ></select>
-                </span>
-            </td>
-            <td id="drc">
-                <span >DRC:
-                <select id="drcSelector"    onchange="control_cmd('drc ' + this.value, update=false)" ></select>
-                </span>
-            </td>
-            <td id="peq">
-                <!-- a PEQ selector will be created if ecasound is used -->
-                <span id="span_peq" style="display:inline-block;">[peq]
-                </span>
             </td>
         </tr>
     </table>
