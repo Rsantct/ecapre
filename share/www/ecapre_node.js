@@ -19,7 +19,7 @@
 */
 
 
-// Enable/disable to printout the http requests and responses:
+// Enable/disable to printout some details
 verbose = false;
 
 
@@ -114,7 +114,7 @@ function onHttpReq( httpReq, httpRes ){
 
                 client.write( cmd_phrase + '\r\n' );
 
-                // The key handler: receiving data
+                // The key: the socket receiving data handler
                 client.on('data', (data) => {
 
                     const ans = data.toString();
