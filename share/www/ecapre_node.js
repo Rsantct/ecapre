@@ -18,6 +18,11 @@
 # along with 'ecapre'.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+
+// Enable/disable to printout the http requests and responses:
+verbose = false;
+
+
 // HARD WIRED GLOBALS:
 const INDEX_HTML_PATH = __dirname + '/index.html';
 const CLISIDE_JS_PATH = __dirname + '/clientside.js';
@@ -82,7 +87,9 @@ function onHttpReq( httpReq, httpRes ){
 
             // debugging received commands but no repeating :-)
             if (last_cmd_phrase !== cmd_phrase){
-                console.log('(node) httpServer RX: /?command=' + cmd_phrase);
+                if (verbose){
+                    console.log('(node) httpServer RX: /?command=' + cmd_phrase);
+                }
                 last_cmd_phrase = cmd_phrase;
             }
 
@@ -122,7 +129,9 @@ function onHttpReq( httpReq, httpRes ){
                         httpRes.write(ans);
                         // debugging sent chunks but no repeating :-)
                         if (last_http_sent !== ans){
-                            console.log( '(node) httpServer TX: ' + ans.slice(0,40) + '...'  );
+                            if (verbose){
+                                console.log( '(node) httpServer TX: ' + ans.slice(0,40) + '...'  );
+                            }
                             last_http_sent = ans;
                         }
                     }
