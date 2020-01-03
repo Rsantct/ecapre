@@ -18,6 +18,16 @@
 # along with 'ecapre'.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+// HARD WIRED GLOBALS:
+const INDEX_HTML_PATH       = __dirname + '/index.html';
+const NODEJS_PORT = 8080;
+
+const ECAPRE_ADDR = 'localhost';
+const ECAPRE_PORT = 9999;
+
+const AUX_ADDR = 'localhost';
+const AUX_PORT = 9998;
+
 // importing modules (require) that we want to use
 const http  = require('http');
 const url   = require('url');
@@ -31,17 +41,11 @@ var ecapre_ans = null;
 // helper to debug received command_phrases
 var last_cmd_phrase = '';
 
-const INDEX_HTML_PATH       = __dirname + '/index.html';
-const NODEJS_LISTENING_PORT = 8080;
+function ecapre_socket( cmd_phrase, host, port ){
 
-const ECAPRE_LISTENING_ADDR = 'localhost';
-const ECAPRE_LISTENING_PORT = 9999;
-
-function ecapre_socket( cmd_phrase ){
-
-    const client = net.createConnection({ port:ECAPRE_LISTENING_PORT,
-                                          host:ECAPRE_LISTENING_ADDR },() => {
-        //console.log('--- connected to server port:9999 :-)');
+    const client = net.createConnection({ port:port,
+                                          host:host },() => {
+        //console.log('--- connected to server :-)');
     });
 
     client.on('error', function(err){
@@ -49,12 +53,12 @@ function ecapre_socket( cmd_phrase ){
     });
 
     client.write( cmd_phrase + '\r\n' );
-    //console.log( '---> 9999 : ', cmd_phrase );
+    //console.log( '|---> : ', cmd_phrase );
 
     // a 'received data (aka data)' event handler for the client socket;
     client.on('data', (data) => {
         ecapre_ans = data.toString();
-        //console.log( '9999 ---> : ', ecapre_ans );
+        //console.log( '--->| : ', ecapre_ans );
     });
 
     // finishing the socket connection
@@ -62,7 +66,7 @@ function ecapre_socket( cmd_phrase ){
 
     // an informative 'end' event handler for the client socket;
     client.on('end', () => {
-      //console.log('--- disconnected from server port:9999');
+      //console.log('--- disconnected from server');
     });
 
     return ecapre_ans;
@@ -111,19 +115,31 @@ http.createServer(function(req, res) {
 
         if ( cmd_phrase ){
 
-            // monitoring received commands
+            // monitoring received commands, but no repeating :-)
             if (last_cmd_phrase !== cmd_phrase){
                 console.log('received command=' + cmd_phrase);
                 last_cmd_phrase = cmd_phrase;
             }
-            // pass the command phrase to the ecapre_control socket
-            var ecapre_ans = ecapre_socket( cmd_phrase );
+
+            // pass the command phrase to the related socket:
+
+            // If prefix 'aux', remove prefix and send to the AUX server
+            if ( cmd_phrase.split(' ')[0] == 'aux' ){
+                var tmp = cmd_phrase.split(' ').slice(1)
+                                                .toString()
+                                                  .replace(',',' ');
+                var ans = ecapre_socket( tmp, AUX_ADDR, AUX_PORT );
+            }
+            // else: a regular preamp command will be sent to the ECAPRE server
+            else {
+                var ans = ecapre_socket( cmd_phrase, ECAPRE_ADDR, ECAPRE_PORT );
+            }
         }
         // And finally we pass the ecapre_control response to the http client side
         // while ending the http response.
-        res.end(ecapre_ans);
+        res.end(ans);
     }
 
-}).listen( NODEJS_LISTENING_PORT );
+}).listen( NODEJS_PORT );
 
-console.log('Server running at http://localhost:' + NODEJS_LISTENING_PORT + '/');
+console.log('Server running at http://localhost:' + NODEJS_PORT + '/');
