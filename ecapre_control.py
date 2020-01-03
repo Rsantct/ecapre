@@ -107,11 +107,14 @@ def restore():
     with open(STATE_FNAME, 'r') as f:
         state = yaml.load(f)
 
+    # Mono
+    cross_chains( {True:'on', False:'off'}[ state["mono"] ] )
+
     for chain in ('L','R'):
         print( f'(ecapre_control) restoring [{chain}] from disk file .state.yml' )
 
         # Level
-        set_level( chain, state['level'], state['balance'] )
+        set_level(chain, state['level'] - 3.0 * state['mono'], state['balance'])
 
         # Setting Loudness level compensation, by following
         # the attenuation dB below level=0dB (reference SPL)
@@ -142,6 +145,14 @@ def do( command_phrase ):
     state = process( cmd, arg, relative )
     return json.dumps(state).encode()
 
+def cross_chains(mode):
+    if mode == 'on':
+        eca.ecanet( 'jack-connect ecasound:out_1 system:playback_2' )
+        eca.ecanet( 'jack-connect ecasound:out_2 system:playback_1' )
+    else:
+        eca.ecanet( 'jack-disconnect ecasound:out_1 system:playback_2' )
+        eca.ecanet( 'jack-disconnect ecasound:out_2 system:playback_1' )
+
 # Main function for command processing
 def process( cmd, arg, relative ):
     """ input:  a tuple (command, arg, relative)
@@ -152,8 +163,21 @@ def process( cmd, arg, relative ):
     with open(STATE_FNAME, 'r') as f:
         state = yaml.load(f)
 
+    # Mute
+    if cmd == 'mute' and arg in ('on','off','toggle'):
+        # arg can be 'on'|'off'|'toggle'
+        # state options are boolean
+        for chain in 'L','R':
+            eca.ecanet( f'c-select {chain}' )
+            eca.ecanet( f'c-mute {arg}' )
+        muted = {   'on':      True,
+                    'off':     False,
+                    'toggle':  {True:False, False:True}[state['muted']]
+                }[arg]
+        state["muted"] = muted
+
     # Mono management
-    if cmd == 'mono':
+    elif cmd == 'mono':
 
         # arg can be 'on'|'off'|'toggle'
         # state options are boolean
@@ -163,44 +187,25 @@ def process( cmd, arg, relative ):
                   }[arg]
 
         if mono_act:
-            # !!! WIP !!!
-            pass
+            cross_chains('on')
+            for chain in 'L','R':
+                set_level(chain, state['level'] - 3.0 , state['balance'])
         else:
-            # !!! WIP !!!
-            pass
+            cross_chains('off')
+            for chain in 'L','R':
+                set_level(chain, state['level'] + 3.0 , state['balance'])
 
         state['mono'] = mono_act
 
-    # Mute
-    elif cmd == 'mute':
-        # arg can be 'on'|'off'|'toggle'
-        # state options are boolean
-        muted = {   'on':      True,
-                    'off':     False,
-                    'toggle':  {True:False, False:True}[state['muted']]
-                }[arg]
-        if muted:
-            for chain in 'L','R':
-                cmds = [ f'c-select {chain}',
-                         f'cop-set {CFG["AMP_COP_IDX"]},1,-100' ]
-                for cmd in cmds:
-                    eca.ecanet(cmd)
-        else:
-            for chain in 'L','R':
-                set_level(chain, state['level'], state['balance'])
-
-        state["muted"] = muted
-
     # Level adjustment
-    elif cmd == 'level' and isFloat(arg) and not state["muted"]:
-
+    elif cmd == 'level' and isFloat(arg):
         if relative:
             level = state['level'] + float(arg)
         else:
             level = float(arg)
 
         for chain in 'L','R':
-            set_level(chain, level, state['balance'])
+            set_level(chain, level - 3.0 * state['mono'], state['balance'])
 
         # Setting Loudness level compensation, by following
         # the attenuation dB below level=0dB (reference SPL)
@@ -216,7 +221,7 @@ def process( cmd, arg, relative ):
         # clamp
         bal = max(min(bal, BALANCE_SPAN), -BALANCE_SPAN)
         for chain in 'L','R':
-            set_level(chain, state['level'], bal)
+            set_level( chain, state['level'] - 3.0 * state['mono'], bal )
         state["balance"] = bal
 
     # Loudness_track management
