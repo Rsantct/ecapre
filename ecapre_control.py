@@ -153,6 +153,14 @@ def cross_chains(mode):
         eca.ecanet( 'jack-disconnect ecasound:out_1 system:playback_2' )
         eca.ecanet( 'jack-disconnect ecasound:out_2 system:playback_1' )
 
+def select_input(input_name):
+    if input_name == 'analog':
+        eca.ecanet( 'jack-connect system:capture_1 ecasound:in_1' )
+        eca.ecanet( 'jack-connect system:capture_2 ecasound:in_2' )
+    else:
+        eca.ecanet( 'jack-disconnect system:capture_1 ecasound:in_1' )
+        eca.ecanet( 'jack-disconnect system:capture_2 ecasound:in_2' )
+
 # Main function for command processing
 def process( cmd, arg, relative ):
     """ input:  a tuple (command, arg, relative)
@@ -163,8 +171,13 @@ def process( cmd, arg, relative ):
     with open(STATE_FNAME, 'r') as f:
         state = yaml.load(f)
 
+    # Inputs
+    if cmd == 'input':
+        select_input( arg )
+        state["input"] = arg
+
     # Mute
-    if cmd == 'mute' and arg in ('on','off','toggle'):
+    elif cmd == 'mute' and arg in ('on','off','toggle'):
         # arg can be 'on'|'off'|'toggle'
         # state options are boolean
         for chain in 'L','R':
