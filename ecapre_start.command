@@ -16,11 +16,12 @@ export LADSPA_PATH=$LADSPA_PATH:"${HOME}"/ecapre/lib/ladspa
 
 echo "(i) LADSPA_PATH=""$LADSPA_PATH"
 
-# killing the control WEB PAGE server
+# killing the WEB PAGE server
 pkill -f 'node ecapre'
 
-# killing the control TCP server
+# killing the CONTROL and AUX TCP servers
 pkill -f 'server.py ecapre_control'
+pkill -f 'server.py ecapre_aux'
 
 # killing any ecasound an jack stuff
 killall -KILL ecasound
@@ -68,13 +69,8 @@ tones_roomg_copID=1
 "${HOME}"/ecapre/ecapre_control.py restore
 
 # Wiring:
-
-#jack_connect  'system:capture_1'  'ecasound:in_1'  1>/dev/null 2>&1
-#jack_connect  'system:capture_2'  'ecasound:in_2'  1>/dev/null 2>&1
-
 jack_connect  'ecasound:out_1'  'system:playback_1'  1>/dev/null 2>&1
 jack_connect  'ecasound:out_2'  'system:playback_2'  1>/dev/null 2>&1
-
 jack_connect  'JackBridge #1:output_0'  'ecasound:in_1'  1>/dev/null 2>&1
 jack_connect  'JackBridge #1:output_1'  'ecasound:in_2'  1>/dev/null 2>&1
 
@@ -82,6 +78,11 @@ jack_connect  'JackBridge #1:output_1'  'ecasound:in_2'  1>/dev/null 2>&1
 CONTROL_ADDR=$(grep control_addr $HOME/ecapre/ecapre.config | sed s/\ \ */\ /g | cut -d' ' -f2)
 CONTROL_PORT=$(grep control_port $HOME/ecapre/ecapre.config | sed s/\ \ */\ /g | cut -d' ' -f2)
 "${HOME}"/ecapre/share/server.py ecapre_control "$CONTROL_ADDR" "$CONTROL_PORT" &
+
+# Launching the control TCP service
+AUX_ADDR=$(grep aux_addr $HOME/ecapre/ecapre.config | sed s/\ \ */\ /g | cut -d' ' -f2)
+AUX_PORT=$(grep aux_port $HOME/ecapre/ecapre.config | sed s/\ \ */\ /g | cut -d' ' -f2)
+"${HOME}"/ecapre/share/server.py ecapre_aux "$AUX_ADDR" "$AUX_PORT" &
 
 # Launching the control WEB PAGE server
 node "${HOME}"/ecapre/share/www/ecapre_node.js &
