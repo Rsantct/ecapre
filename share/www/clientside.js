@@ -31,28 +31,29 @@
 var auto_update_interval = 1000;            // Auto-update interval millisec
 var advanced_controls = false;              // Default for displaying advanced controls
 
-// Talks to the ecapre TCP server
+// Talks to the ecapre node.js HTTP SERVER
 function control_cmd( cmd ) {
 
     // avoids http socket lossing some symbols
     cmd = http_prepare(cmd);
 
-    // https://www.w3schools.com/js/js_ajax_http.asp
     var myREQ = new XMLHttpRequest();
-    // waiting for HttpRequest has completed.
+
+    // a handler that waits for HttpRequest has completed.
     myREQ.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
             return;
         }
     };
 
-    // the http request:
     myREQ.open(method="GET", url="/?command="+cmd, async=false);
     myREQ.send();
+    //console.log('TX: ' + cmd);
+
     ans = myREQ.responseText;
-    // debug
-    //console.log('ans', ans);
-    return ans;
+    //console.log('RX: ' + ans);
+
+    return JSON.parse(ans);
 }
 
 function page_initiate(){
@@ -60,52 +61,44 @@ function page_initiate(){
     // Web header
     document.getElementById("main_lside").innerText = ':: ecapre ::';
 
-    // Queries the system status and updates the page
-    page_update();
+    // Filling the selectors: inputs
+    fills_inputs_selector();
 
-    // Waits 1 sec, then schedules the auto-update itself:
+    // Macros buttons **** WIP ****
+    filling_macro_buttons();
+
+    // Schedules the page_update (only runtime variable items):
     // Notice: the function call inside setInterval uses NO brackets)
-    setTimeout( setInterval( page_update, auto_update_interval ), 1000);
+    setInterval( page_update, auto_update_interval );
 
-    // Macros buttons
-    var tmp = control_cmd( 'aux get_macros' );
-    console.log(tmp);
 }
 
-
-// Dumps system status into the web page
+// Queries the system status and updates the page (only runtime variable items):
 function page_update() {
+
+    // Amplifier switching
+    update_ampli_switch();
 
     var status = control_cmd('dummy');
 
-    level   = status_decode(status, 'level').toFixed(1);
-    balance = status_decode(status, 'balance');
-    bass    = status_decode(status, 'bass');
-    treble  = status_decode(status, 'treble');
+    // The selected item on INPUTS
+    document.getElementById("inputsSelector").value = status['input'];
 
     // Level, balance, tone info
-    document.getElementById("levelInfo").innerHTML  =            level;
-    document.getElementById("balInfo").innerHTML    = 'BAL: '  + balance;
-    document.getElementById("bassInfo").innerText   = 'BASS: ' + bass;
-    document.getElementById("trebleInfo").innerText = 'TREB: ' + treble;
+    document.getElementById("levelInfo").innerHTML  = status['level'].toFixed(1);
+    document.getElementById("balInfo").innerHTML    = 'BAL: '  + status['balance'];
+    document.getElementById("bassInfo").innerText   = 'BASS: ' + status['bass'];
+    document.getElementById("trebleInfo").innerText = 'TREB: ' + status['treble'];
 
     // the loudness reference to the slider and the loudness monitor to the meter
     document.getElementById("loud_slider_container").innerText =
-                                                     'Loud. Ref: '
-                                                      + status_decode(status, 'loudness_ref');
-    document.getElementById("loud_slider").value    = parseInt(status_decode(status, 'loudness_ref'));
-    //loud_measure = get_file('loudness_monitor').trim();
-    //document.getElementById("loud_meter").value    =  loud_measure;
-
-    // The selected item on INPUTS, XO, DRC and PEQ
-    //document.getElementById("targetSelector").value =            status_decode(status, 'target');
-    //document.getElementById("inputsSelector").value =            status_decode(status, 'input');
-    //document.getElementById("xoSelector").value     =            status_decode(status, 'xo_set');
-    //document.getElementById("drcSelector").value    =            status_decode(status, 'drc_set');
+                    'Loud. Ref: ' + status['loudness_ref'];
+    document.getElementById("loud_slider").value    =
+                    parseInt(status['loudness_ref']);
 
 
     // Highlights activated buttons and related indicators
-    if ( status_decode(status, 'muted') == true ) {
+    if ( status['muted'] == true ) {
         document.getElementById("buttonMute").style.background = "rgb(185, 185, 185)";
         document.getElementById("buttonMute").style.color = "white";
         document.getElementById("buttonMute").style.fontWeight = "bolder";
@@ -116,7 +109,7 @@ function page_update() {
         document.getElementById("buttonMute").style.fontWeight = "normal";
         document.getElementById("levelInfo").style.color = "white";
     }
-    if ( status_decode(status, 'mono') == true ) {
+    if ( status['mono'] == true ) {
         document.getElementById("buttonMono").style.background = "rgb(100, 0, 0)";
         document.getElementById("buttonMono").style.color = "rgb(255, 200, 200)";
         document.getElementById("buttonMono").innerText = 'MO';
@@ -125,7 +118,7 @@ function page_update() {
         document.getElementById("buttonMono").style.color = "white";
         document.getElementById("buttonMono").innerText = 'ST';
     }
-    if ( status_decode(status, 'loudness_track') == true ) {
+    if ( status['loudness_track'] == true ) {
         document.getElementById("buttonLoud").style.background = "rgb(0, 90, 0)";
         document.getElementById("buttonLoud").style.color = "white";
         document.getElementById("buttonLoud").innerText = 'LD';
@@ -138,36 +131,6 @@ function page_update() {
         document.getElementById( "loudness_metering_and_slider").style.display = "none";
     }
 
-    // Header
-    document.getElementById("main_lside").innerText = ':: ecapre ::';
-
-    // Updates the amplifier switch
-    //update_ampli_switch()
-
-    // Updates metadata player info
-    //update_player_info()
-
-    // Highlights player controls when activated
-    //update_player_controls()
-
-    // Displays the [url] button if input == 'iradio' or 'istreams'
-    //if (status_decode(status, 'input') == "iradio" ||
-    //    status_decode(status, 'input') == "istreams") {
-    //    document.getElementById( "url_button").style.display = "inline";
-    //}
-    //else {
-    //    document.getElementById( "url_button").style.display = "none";
-    //}
-
-    // Displays the track selector if input == 'cd'
-    //if (status_decode(status, 'input') == "cd") {
-    //    document.getElementById( "track_selector").style.display = "inline";
-    //}
-    //else {
-    //    document.getElementById( "track_selector").style.display = "none";
-    //}
-
-
     // Displays or hides the advanced controls section
     if ( advanced_controls == true ) {
         document.getElementById( "advanced_controls").style.display = "block";
@@ -178,6 +141,75 @@ function page_update() {
         document.getElementById( "level_buttons13").style.display = "none";
     }
 
+}
+
+// INPUTS selector
+function fills_inputs_selector() {
+
+    // getting the inputs list from running core
+    const inputs = control_cmd( 'aux get_inputs' );
+    //console.log( typeof inputs, inputs );
+
+    // Filling the options in the inputs selector
+    // https://www.w3schools.com/jsref/met_select_add.asp
+    var x = document.getElementById("inputsSelector");
+    for ( i in inputs) {
+        var option = document.createElement("option");
+        option.text = inputs[i];
+        x.add(option);
+    }
+
+    // And adds the input 'none' as intended into server_process that will disconnet all inputs
+    var option = document.createElement("option");
+    option.text = 'none';
+    x.add(option);
+
+}
+
+
+//////// USER MACROS ////////
+// Filling the user's macros buttons
+function filling_macro_buttons() {
+    const macros = control_cmd( 'aux get_macros' ).split(',');
+    // If no macros on the list, do nothing, so leaving "display:none" on the buttons keypad div
+    if ( macros.length < 1 ) { return; }
+    // If any macro found, lets show the macros toggle switch
+    document.getElementById( "playback_control_23").style.display = 'block';
+    document.getElementById( "playback_control_21").style.display = 'block'; // just for symmetry reasons
+    var macro = ''
+    for (i in macros) {
+        macro = macros[i];
+        // Macro files are named this way: 'N_macro_name', so N will serve as button position
+        macro_name = macro.slice(2, );
+        macro_pos = macro.split('_')[0];
+        document.getElementById( "macro_button_" + macro_pos ).innerText = macro_name;
+    }
+}
+// Toggles displaying macro buttons
+function macros_toggle() {
+    var curMode = document.getElementById( "macro_buttons").style.display;
+    if (curMode == 'none') {
+        document.getElementById( "macro_buttons").style.display = 'inline-table'
+    }
+    else {
+        document.getElementById( "macro_buttons").style.display = 'none'
+    }
+}
+
+// Executes user defined macros
+function user_macro(prefix, name) {
+    control_cmd( 'aux run_macro ' + prefix + '_' + name );
+}
+
+//////// AUX SERVER FUNCTIONS ////////
+// Switch the amplifier
+function ampli(mode) {
+    control_cmd( 'aux ampli_switch ' + mode );
+}
+// Queries the remote amplifier switch state
+function update_ampli_switch() {
+    const amp_state = control_cmd( 'aux amp_switch state ' ).replace('\n','');
+    document.getElementById("onoffSelector").value = amp_state;
 }
 
 //////// TOGGLES ADVANCED CONTROLS ////////
@@ -195,12 +227,6 @@ function advanced_toggle() {
 function loudness_ref_change(slider_value) {
     loudness_ref = parseInt(slider_value);
     control_cmd('loudness_ref ' + loudness_ref, update=false);
-}
-
-// Decodes the value from a system parameter inside the system status stream
-function status_decode(state, prop) {
-    state = JSON.parse(state);
-    return state[prop];
 }
 
 // Auxiliary function to avoid http socket lossing some symbols
@@ -223,3 +249,13 @@ function http_prepare(x) {
     x = x.replace('/', '%2F')
     return x;
 }
+
+// Aux to test buttons
+function TESTING1(){
+    //do something
+}
+function TESTING2(){
+    //do something
+}
+
+
