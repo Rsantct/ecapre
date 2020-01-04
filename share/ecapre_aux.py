@@ -16,14 +16,13 @@ import json
 import yaml
 import sys
 import os
-from subprocess import Popen
+from subprocess import Popen, check_output
 
 UHOME = os.path.expanduser('~')
 
 
 with open(f'{UHOME}/ecapre/ecapre.config', 'r') as f:
     CFG = yaml.load(f)
-
 
 def isFloat(s):
     if not s:
@@ -33,7 +32,6 @@ def isFloat(s):
         return True
     except ValueError:
         return False
-
 
 def read_command_phrase(command_phrase):
     cmd, arg = None, None
@@ -50,14 +48,12 @@ def read_command_phrase(command_phrase):
         pass
     return cmd, arg
 
-
 # Interface function to plug this on server.py
 def do( command_phrase ):
     cmd, arg = read_command_phrase( command_phrase
                                               .replace('\n','').replace('\r','') )
     result = process( cmd, arg )
     return json.dumps(result).encode()
-
 
 # Main function for command processing
 def process( cmd, arg ):
@@ -66,9 +62,21 @@ def process( cmd, arg ):
     """
     result = ''
 
+    # Inputs list:
+    if cmd == 'get_inputs':
+        inputs = CFG["inputs"]
+        return inputs
+
     # Amplifier switching
-    if cmd == 'ampli' and arg in ('on','off'):
-        Popen( f'ampli.sh {arg}', shell=True )
+    if cmd == 'amp_switch':
+        if arg in ('on','off'):
+            print(cmd, arg)
+            Popen( f'ampli.sh {arg}'.split(), shell=False )
+        elif arg == 'state':
+            try:
+                return check_output( ['ampli.sh'], shell=False ).decode()
+            except:
+                return 'off'
 
     # List of macros under macros/ folder
     if cmd == 'get_macros':
@@ -81,7 +89,8 @@ def process( cmd, arg ):
         result = ','.join(macro_files)
 
     # Run a macro
-    if cmd == 'macro':
+    if cmd == 'run_macro':
+        print(arg)
         Popen( f'{UHOME}/ecapre/macros/{arg}', shell=True)
 
     # Help
