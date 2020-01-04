@@ -90,7 +90,7 @@ def process( cmd, arg ):
 
     # Run a macro
     if cmd == 'run_macro':
-        print(arg)
+        print( f'(ecapre_aux) running macro: {arg}' )
         Popen( f'{UHOME}/ecapre/macros/{arg}', shell=True)
 
     # Help
