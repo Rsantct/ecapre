@@ -70,7 +70,7 @@ def process( cmd, arg ):
     # Amplifier switching
     if cmd == 'amp_switch':
         if arg in ('on','off'):
-            print(cmd, arg)
+            print( f'(ecapre_aux) ampli.sh {arg}' )
             Popen( f'ampli.sh {arg}'.split(), shell=False )
         elif arg == 'state':
             try:
