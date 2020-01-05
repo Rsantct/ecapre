@@ -137,7 +137,10 @@ def restore():
                               house_atten = -state['house_curve'] )
 
 def read_command_phrase(command_phrase):
-    cmd, arg, relative = None, None, False
+    cmd, arg, relative = '', '', False
+    # avoid crash if an empy string is received.
+    if not command_phrase.strip():
+        return cmd, arg, relative
     # This is to avoid empty values when there are more
     # than on space as delimiter inside the command_phrase:
     opcs = [x for x in command_phrase.split(' ') if x]
@@ -164,7 +167,7 @@ def do( command_phrase ):
 # Main function for command processing
 def process( cmd, arg, relative ):
     """ input:  a tuple (command, arg, relative)
-        output: the ecapre state dictionary
+        output: the ecapre state dictionary after processing the input
     """
 
     # Load current status
@@ -302,6 +305,8 @@ if __name__ == '__main__':
 
         command_phrase = ' '.join (sys.argv[1:] )
         cmd, arg, relative = read_command_phrase( command_phrase )
+        if not cmd:
+            print_state()
         dummy = process( cmd, arg, relative )
 
     # If no arguments, print the current settings
