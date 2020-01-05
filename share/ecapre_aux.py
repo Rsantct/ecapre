@@ -20,18 +20,8 @@ from subprocess import Popen, check_output
 
 UHOME = os.path.expanduser('~')
 
-
 with open(f'{UHOME}/ecapre/ecapre.config', 'r') as f:
     CFG = yaml.load(f)
-
-def isFloat(s):
-    if not s:
-        return False
-    try:
-        float(s)
-        return True
-    except ValueError:
-        return False
 
 def read_command_phrase(command_phrase):
     cmd, arg = None, None
