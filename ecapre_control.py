@@ -52,6 +52,22 @@ def isFloat(s):
     except ValueError:
         return False
 
+def cross_chains(mode):
+    if mode == 'on':
+        eca.ecanet( 'jack-connect ecasound:out_1 system:playback_2' )
+        eca.ecanet( 'jack-connect ecasound:out_2 system:playback_1' )
+    else:
+        eca.ecanet( 'jack-disconnect ecasound:out_1 system:playback_2' )
+        eca.ecanet( 'jack-disconnect ecasound:out_2 system:playback_1' )
+
+def select_input(input_name):
+    if input_name == 'analog':
+        eca.ecanet( 'jack-connect system:capture_1 ecasound:in_1' )
+        eca.ecanet( 'jack-connect system:capture_2 ecasound:in_2' )
+    else:
+        eca.ecanet( 'jack-disconnect system:capture_1 ecasound:in_1' )
+        eca.ecanet( 'jack-disconnect system:capture_2 ecasound:in_2' )
+
 def set_level(chain, dB, balance):
     """ This is for the -eadb preset as the first chain operator.
         It works with dB values
@@ -60,24 +76,6 @@ def set_level(chain, dB, balance):
     cmds = [ f'c-select {chain}', f'cop-set {CFG["AMP_COP_IDX"]},1,{str(ch_value)}' ]
     for cmd in cmds:
         eca.ecanet(cmd)
-
-def read_command_phrase(command_phrase):
-    cmd, arg, relative = None, None, False
-    # This is to avoid empty values when there are more
-    # than on space as delimiter inside the command_phrase:
-    opcs = [x for x in command_phrase.split(' ') if x]
-    if 'add' in opcs:
-        relative = True
-        opcs.remove('add')
-    try:
-        cmd = opcs[0]
-    except:
-        raise
-    try:
-        arg = opcs[1]
-    except:
-        pass
-    return cmd, arg, relative
 
 def print_state():
 
@@ -138,28 +136,30 @@ def restore():
                               room_gain = 0.0,
                               house_atten = -state['house_curve'] )
 
+def read_command_phrase(command_phrase):
+    cmd, arg, relative = None, None, False
+    # This is to avoid empty values when there are more
+    # than on space as delimiter inside the command_phrase:
+    opcs = [x for x in command_phrase.split(' ') if x]
+    if 'add' in opcs:
+        relative = True
+        opcs.remove('add')
+    try:
+        cmd = opcs[0]
+    except:
+        raise
+    try:
+        arg = opcs[1]
+    except:
+        pass
+    return cmd, arg, relative
+
 # Interface function to plug this on server.py
 def do( command_phrase ):
     cmd, arg, relative = read_command_phrase( command_phrase
                                               .replace('\n','').replace('\r','') )
     state = process( cmd, arg, relative )
     return json.dumps(state).encode()
-
-def cross_chains(mode):
-    if mode == 'on':
-        eca.ecanet( 'jack-connect ecasound:out_1 system:playback_2' )
-        eca.ecanet( 'jack-connect ecasound:out_2 system:playback_1' )
-    else:
-        eca.ecanet( 'jack-disconnect ecasound:out_1 system:playback_2' )
-        eca.ecanet( 'jack-disconnect ecasound:out_2 system:playback_1' )
-
-def select_input(input_name):
-    if input_name == 'analog':
-        eca.ecanet( 'jack-connect system:capture_1 ecasound:in_1' )
-        eca.ecanet( 'jack-connect system:capture_2 ecasound:in_2' )
-    else:
-        eca.ecanet( 'jack-disconnect system:capture_1 ecasound:in_1' )
-        eca.ecanet( 'jack-disconnect system:capture_2 ecasound:in_2' )
 
 # Main function for command processing
 def process( cmd, arg, relative ):
