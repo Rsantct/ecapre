@@ -204,7 +204,7 @@ function user_macro(prefix, name) {
 //////// AUX SERVER FUNCTIONS ////////
 // Switch the amplifier
 function ampli(mode) {
-    control_cmd( 'aux ampli_switch ' + mode );
+    control_cmd( 'aux amp_switch ' + mode );
 }
 // Queries the remote amplifier switch state
 function update_ampli_switch() {
