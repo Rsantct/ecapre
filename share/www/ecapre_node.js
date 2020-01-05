@@ -111,32 +111,38 @@ function onHttpReq( httpReq, httpRes ){
             // A socket client to ECAPRE(9999) or AUX(9998) TCP servers
             const client = net.createConnection( { port:cli_port,host:cli_addr },
                                                  () => {
+            });
 
-                client.write( cmd_phrase + '\r\n' );
+            // If the TCP server is unavailable, then do nothing but ending the http stuff
+            client.on('error', function(err){
+                httpRes.end();
+                client.destroy();
+            });
 
-                // The key: the socket receiving data handler
-                client.on('data', (data) => {
+            client.write( cmd_phrase + '\r\n' );
 
-                    const ans = data.toString();
+            // The key (*) - the handler for socket received data -
+            client.on('data', (data) => {
 
-                    client.end();
+                const ans = data.toString();
 
-                    // (!) Important to write and end the httpResponse
-                    //     here INSIDE the client.on('data') HANDLER
-                    //     because of the handler (and all JS) is asynchronous
-                    httpRes.writeHead(200, {'Content-Type':'text/plain'});
-                    if (ans){
-                        httpRes.write(ans);
-                        // debugging sent chunks but no repeating :-)
-                        if (last_http_sent !== ans){
-                            if (verbose){
-                                console.log( '(node) httpServer TX: ' + ans.slice(0,40) + '...'  );
-                            }
-                            last_http_sent = ans;
+                client.end();
+
+                // (*) Important to write and end the httpResponse
+                //     here INSIDE the client.on('data') HANDLER
+                //     because of the handler (and all JS) is asynchronous
+                httpRes.writeHead(200, {'Content-Type':'text/plain'});
+                if (ans){
+                    httpRes.write(ans);
+                    // debugging sent chunks but no repeating :-)
+                    if (last_http_sent !== ans){
+                        if (verbose){
+                            console.log( '(node) httpServer TX: ' + ans.slice(0,40) + '...'  );
                         }
+                        last_http_sent = ans;
                     }
-                    httpRes.end();
-                });
+                }
+                httpRes.end();
             });
         }
     }
