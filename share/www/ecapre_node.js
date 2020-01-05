@@ -18,10 +18,12 @@
 # along with 'ecapre'.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-
 // Enable or disable to printing out some details
-verbose = false;
-
+var verbose = false;
+const opcs = process.argv.slice(2);
+if ( opcs.indexOf('-v') != -1 ){
+    verbose = true;
+}
 
 // HARD WIRED GLOBALS:
 const INDEX_HTML_PATH = __dirname + '/index.html';
