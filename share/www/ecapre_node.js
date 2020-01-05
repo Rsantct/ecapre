@@ -18,6 +18,7 @@
 # along with 'ecapre'.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+
 // Enable or disable to printing out some details
 var verbose = false;
 const opcs = process.argv.slice(2);
@@ -122,11 +123,19 @@ function onHttpReq( httpReq, httpRes ){
             });
 
             client.write( cmd_phrase + '\r\n' );
+            if (verbose){
+                console.log( '(node) ' + cli_addr + ':' +
+                             cli_port + ' TX: ' + cmd_phrase );
+            }
 
             // The key (*) - the handler for socket received data -
             client.on('data', (data) => {
 
                 const ans = data.toString();
+                if (verbose){
+                    console.log( '(node) ' + cli_addr + ':' +
+                                 cli_port + ' RX: ' + data );
+                }
 
                 client.end();
 
@@ -139,7 +148,7 @@ function onHttpReq( httpReq, httpRes ){
                     // debugging sent chunks but no repeating :-)
                     if (last_http_sent !== ans){
                         if (verbose){
-                            console.log( '(node) httpServer TX: ' + ans.slice(0,40) + '...'  );
+                            console.log( '(node) httpServer TX: ' + ans.slice(0,40)  );
                         }
                         last_http_sent = ans;
                     }
