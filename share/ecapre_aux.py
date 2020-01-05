@@ -64,9 +64,9 @@ def process( cmd, arg ):
             Popen( f'ampli.sh {arg}'.split(), shell=False )
         elif arg == 'state':
             try:
-                return check_output( ['ampli.sh'], shell=False ).decode()
+                result = check_output( ['ampli.sh'], shell=False ).decode()
             except:
-                return 'off'
+                result = 'off'
 
     # List of macros under macros/ folder
     if cmd == 'get_macros':
