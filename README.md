@@ -13,7 +13,7 @@ Features:
 
 This project is intended to work on a Mac OS, and of course under a Linux machine.
 
-A more precise, flexible and powerfull audio system, including FIR filtering, active loudspeaker xover, and more you can go to [pe.audio.sys](https://github.com/Rsantct/pe.audio.sys) (currently under Linux only).
+For a more precise, flexible and powerfull audio system, including FIR filtering, active loudspeaker xover, and more features, you can go to [pe.audio.sys](https://github.com/Rsantct/pe.audio.sys) (currently only under Linux).
 
 ## Mac OS
 
