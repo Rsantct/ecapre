@@ -63,8 +63,12 @@ def process( cmd, arg ):
     """
     result = ''
 
+    # Get the system name
+    if cmd == 'system_name':
+        result = CFG['system_name']
+
     # Amplifier switching
-    if cmd == 'amp_switch':
+    elif cmd == 'amp_switch':
         if arg in ('on','off'):
             print( f'(aux) {AMP_MANAGER.split("/")[-1]} {arg}' )
             Popen( f'{AMP_MANAGER} {arg}'.split(), shell=False )
