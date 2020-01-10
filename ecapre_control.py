@@ -6,18 +6,27 @@
 
         ecapre_control.py [command value] [add]
 
-        commands:  values:
-        ---------  -------
+        (use 'add' for relative adjustment)
 
-        loudness    on | off |toggle
-        target      room-house (dB-dB)
+        commands:       values:
+        ---------       -------
 
-        level       xx (dB)
-        balance     xx (dB)
-        bass        xx (dB)
-        treble      xx (dB)
+        input           inputName
+        get_inputs
+        mute            on | off |toggle
+        mono            on | off |toggle
 
-            use 'add' for relative xx adjustment
+        loudness        on | off |toggle
+        loudness_ref    xx (dB)
+        target          room-house (dB-dB)
+
+        level           xx (dB)
+        balance         xx (dB)
+        bass            xx (dB)
+        treble          xx (dB)
+
+        help
+
 """
 
 import json
@@ -170,14 +179,24 @@ def process( cmd, arg, relative ):
         output: the ecapre state dictionary after processing the input
     """
 
+    result = ''
+
     # Load current status
     with open(STATE_FNAME, 'r') as f:
         state = yaml.load(f)
 
-    # Inputs
-    if cmd == 'input':
+    # Get state
+    if cmd in ('state','get_state','status'):
+        result = state
+
+    # Select input
+    elif cmd == 'input':
         select_input( arg )
         state["input"] = arg
+
+    # Get inputs
+    elif cmd == 'get_inputs':
+        result = CFG["inputs"]
 
     # Mute
     elif cmd == 'mute' and arg in ('on','off','toggle'):
@@ -296,7 +315,7 @@ def process( cmd, arg, relative ):
     with open(STATE_FNAME, 'w') as f:
         yaml.dump( state, f, default_flow_style=False )
 
-    return state
+    return result
 
 # command line use
 if __name__ == '__main__':
