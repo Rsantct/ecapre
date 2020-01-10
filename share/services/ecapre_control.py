@@ -37,9 +37,9 @@ from os.path import expanduser
 UHOME=expanduser('~')
 sys.path.append( f'{UHOME}/ecapre/share' )
 
-import share.ecanet        as eca
-import share.eca_Eq4p_ctrl as Eq4p
-import share.eca_Eq10_ctrl as Eq10
+import ecanet        as eca
+import eca_Eq4p_ctrl as Eq4p
+import eca_Eq10_ctrl as Eq10
 
 with open(f'{UHOME}/ecapre/ecapre.config', 'r') as f:
     CFG = yaml.load(f)
