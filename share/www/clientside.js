@@ -60,6 +60,8 @@ function page_initiate(){
     // Macros buttons (!) place this first because
     // aux server is supposed to be always alive
     fill_in_macro_buttons();
+    // Initiate fixed page elements
+    fill_in_page_header_and_selectors();
     // Schedules the page_update (only runtime variable items):
     // Notice: the function call inside setInterval uses NO brackets)
     setInterval( page_update, AUTO_UPDATE_INTERVAL );
@@ -67,15 +69,14 @@ function page_initiate(){
 
 function fill_in_page_header_and_selectors(){
     // Web header
-    document.getElementById("main_lside").innerText = ':: pe.audio.sys :: ';
+    document.getElementById("main_lside").innerText = ':: '+
+                            JSON.parse(control_cmd('aux system_name')) +' :: ';
     // Filling in the selectors: inputs
     fill_in_inputs_selector();
 }
 
 // Queries the system status and updates the page (only runtime variable items):
 function page_update() {
-
-    fill_in_page_header_and_selectors();
 
     // Amplifier switching
     update_ampli_switch();
