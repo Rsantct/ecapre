@@ -28,8 +28,8 @@
 */
 
 /////////////   GLOBALS //////////////
-var auto_update_interval = 1000;            // Auto-update interval millisec
-var advanced_controls = false;              // Default for displaying advanced controls
+const AUTO_UPDATE_INTERVAL = 1000;      // Auto-update interval millisec
+var advanced_controls = false;          // Defaults hide advanced controls
 
 // Talks to the ecapre node.js HTTP SERVER
 function control_cmd( cmd ) {
@@ -53,33 +53,40 @@ function control_cmd( cmd ) {
     ans = myREQ.responseText;
     //console.log('RX: ' + ans);
 
-    return JSON.parse(ans);
+    return ans;
 }
 
 function page_initiate(){
-
-    // Web header
-    document.getElementById("main_lside").innerText = ':: ecapre ::';
-
-    // Filling the selectors: inputs
-    fills_inputs_selector();
-
-    // Macros buttons **** WIP ****
-    filling_macro_buttons();
-
+    // Macros buttons (!) place this first because
+    // aux server is supposed to be always alive
+    fill_in_macro_buttons();
     // Schedules the page_update (only runtime variable items):
     // Notice: the function call inside setInterval uses NO brackets)
-    setInterval( page_update, auto_update_interval );
+    setInterval( page_update, AUTO_UPDATE_INTERVAL );
+}
 
+function fill_in_page_header_and_selectors(){
+    // Web header
+    document.getElementById("main_lside").innerText = ':: pe.audio.sys :: ';
+    // Filling in the selectors: inputs
+    fill_in_inputs_selector();
 }
 
 // Queries the system status and updates the page (only runtime variable items):
 function page_update() {
 
+    fill_in_page_header_and_selectors();
+
     // Amplifier switching
     update_ampli_switch();
 
-    var status = control_cmd('dummy');
+    try{
+        var status = JSON.parse( control_cmd('get_state') );
+    }catch{
+        document.getElementById("main_lside").innerText = ':: not connected :: ';
+        document.getElementById("levelInfo").innerHTML  = '--';
+        return;
+    }
 
     // The selected item on INPUTS
     document.getElementById("inputsSelector").value = status['input'];
@@ -144,33 +151,51 @@ function page_update() {
 }
 
 // INPUTS selector
-function fills_inputs_selector() {
+function fill_in_inputs_selector() {
 
-    // getting the inputs list from running core
-    const inputs = control_cmd( 'aux get_inputs' );
-    //console.log( typeof inputs, inputs );
+    try{
+        var inputs = JSON.parse( control_cmd( 'get_inputs' ) );
+    }catch{
+        return;
+    }
 
     // Filling the options in the inputs selector
-    // https://www.w3schools.com/jsref/met_select_add.asp
-    var x = document.getElementById("inputsSelector");
+    // https://www.w3schools.com/jsref/dom_obj_select.asp
+    select_clear_options(ElementId="inputsSelector");
+    const mySel = document.getElementById("inputsSelector");
     for ( i in inputs) {
         var option = document.createElement("option");
         option.text = inputs[i];
-        x.add(option);
+        mySel.add(option);
     }
 
-    // And adds the input 'none' as intended into server_process that will disconnet all inputs
+    // And adds the input 'none' as expected in server_process that will disconnet all inputs
     var option = document.createElement("option");
     option.text = 'none';
-    x.add(option);
+    mySel.add(option);
 
 }
 
+// Processing the LOUDNESS_REF slider
+function loudness_ref_change(slider_value) {
+    loudness_ref = parseInt(slider_value);
+    control_cmd('loudness_ref ' + loudness_ref, update=false);
+}
 
-//////// USER MACROS ////////
-// Filling the user's macros buttons
-function filling_macro_buttons() {
-    const macros = control_cmd( 'aux get_macros' ).split(',');
+//////// AUX SERVER FUNCTIONS ////////
+// Switch the amplifier
+function ampli(mode) {
+    control_cmd( 'aux amp_switch ' + mode );
+}
+// Queries the remote amplifier switch state
+function update_ampli_switch() {
+    const amp_state = JSON.parse( control_cmd( 'aux amp_switch state' )
+                                  .replace('\n','') );
+    document.getElementById("onoffSelector").value = amp_state;
+}
+// Filling in the user's macro buttons
+function fill_in_macro_buttons() {
+    const macros = JSON.parse( control_cmd( 'aux get_macros' ).split(',') );
     // If no macros on the list, do nothing, so leaving "display:none" on the buttons keypad div
     if ( macros.length < 1 ) { return; }
     // If any macro found, lets show the macros toggle switch
@@ -185,7 +210,14 @@ function filling_macro_buttons() {
         document.getElementById( "macro_button_" + macro_pos ).innerText = macro_name;
     }
 }
-// Toggles displaying macro buttons
+// Executes user defined macros
+function user_macro(prefix, name) {
+    control_cmd( 'aux run_macro ' + prefix + '_' + name );
+}
+
+
+///////////////  MISCEL INTERNAL ////////////
+// Aux to toggle displaying macro buttons
 function macros_toggle() {
     var curMode = document.getElementById( "macro_buttons").style.display;
     if (curMode == 'none') {
@@ -195,24 +227,16 @@ function macros_toggle() {
         document.getElementById( "macro_buttons").style.display = 'none'
     }
 }
-
-// Executes user defined macros
-function user_macro(prefix, name) {
-    control_cmd( 'aux run_macro ' + prefix + '_' + name );
+// Aux to clearing selector elements to avoid repeating
+// when audio processes have changed
+function select_clear_options(ElementId){
+    // https://www.w3schools.com/jsref/dom_obj_select.asp
+    const mySel = document.getElementById(ElementId);
+    for (opt in mySel.options){
+        mySel.remove(opt);
+    }
 }
-
-//////// AUX SERVER FUNCTIONS ////////
-// Switch the amplifier
-function ampli(mode) {
-    control_cmd( 'aux amp_switch ' + mode );
-}
-// Queries the remote amplifier switch state
-function update_ampli_switch() {
-    const amp_state = control_cmd( 'aux amp_switch state ' ).replace('\n','');
-    document.getElementById("onoffSelector").value = amp_state;
-}
-
-//////// TOGGLES ADVANCED CONTROLS ////////
+// Aux to toggle advanced controls
 function advanced_toggle() {
     if ( advanced_controls !== true ) {
         advanced_controls = true;
@@ -220,36 +244,28 @@ function advanced_toggle() {
     else {
         advanced_controls = false;
     }
-    page_update(status);
+    page_update();
 }
-
-// Processing the LOUDNESS_REF slider
-function loudness_ref_change(slider_value) {
-    loudness_ref = parseInt(slider_value);
-    control_cmd('loudness_ref ' + loudness_ref, update=false);
-}
-
-// Auxiliary function to avoid http socket lossing some symbols
+// Aux to avoid http socket lossing some symbols
 function http_prepare(x) {
-    //x = x.replace(' ', '%20')  # leaving spaces as they are
-    x = x.replace('!', '%21')
-    x = x.replace('"', '%22')
-    x = x.replace('#', '%23')
-    x = x.replace('$', '%24')
-    x = x.replace('%', '%25')
-    x = x.replace('&', '%26')
-    x = x.replace("'", '%27')
-    x = x.replace('(', '%28')
-    x = x.replace(')', '%29')
-    x = x.replace('*', '%2A')
-    x = x.replace('+', '%2B')
-    x = x.replace(',', '%2C')
-    x = x.replace('-', '%2D')
-    x = x.replace('.', '%2E')
-    x = x.replace('/', '%2F')
+    //x = x.replace(' ', '%20');  // leaving spaces as they are
+    x = x.replace('!', '%21');
+    x = x.replace('"', '%22');
+    x = x.replace('#', '%23');
+    x = x.replace('$', '%24');
+    x = x.replace('%', '%25');
+    x = x.replace('&', '%26');
+    x = x.replace("'", '%27');
+    x = x.replace('(', '%28');
+    x = x.replace(')', '%29');
+    x = x.replace('*', '%2A');
+    x = x.replace('+', '%2B');
+    x = x.replace(',', '%2C');
+    x = x.replace('-', '%2D');
+    x = x.replace('.', '%2E');
+    x = x.replace('/', '%2F');
     return x;
 }
-
 // Aux to test buttons
 function TESTING1(){
     //do something
@@ -257,5 +273,3 @@ function TESTING1(){
 function TESTING2(){
     //do something
 }
-
-
