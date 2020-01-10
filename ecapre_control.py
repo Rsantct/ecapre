@@ -179,7 +179,7 @@ def process( cmd, arg, relative ):
         output: the ecapre state dictionary after processing the input
     """
 
-    result = ''
+    result = 'ACK'  # a default result for any processed cmd
 
     # Load current status
     with open(STATE_FNAME, 'r') as f:
@@ -281,7 +281,7 @@ def process( cmd, arg, relative ):
     # Loudness reference management
     elif cmd == 'loudness_ref' and isFloat(arg):
         # !!!! WIP !!!!
-        pass
+        result = 'WIP'
 
     # Bass & Treble setting
     elif cmd in ('bass','treble') and isFloat(arg):
@@ -308,8 +308,12 @@ def process( cmd, arg, relative ):
         restore()
 
     # Help
-    elif '-h' in cmd:
-        print(__doc__)
+    elif cmd in ('-h','--help','help'):
+        result = __doc__
+
+    # Something not processed
+    else:
+        result = 'NACK'
 
     # Saving the new settings
     with open(STATE_FNAME, 'w') as f:
@@ -326,9 +330,5 @@ if __name__ == '__main__':
         cmd, arg, relative = read_command_phrase( command_phrase )
         if not cmd:
             print_state()
-        dummy = process( cmd, arg, relative )
-
-    # If no arguments, print the current settings
-    else:
-        print_state()
+        print( process( cmd, arg, relative ) )
 
