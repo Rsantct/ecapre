@@ -3,5 +3,6 @@
 # More info:     server.py --help
 
 paths:
-    - ecapre
     - ecapre/share
+    - ecapre/share/services
+
