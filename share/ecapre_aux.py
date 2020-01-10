@@ -8,7 +8,7 @@
 
         commands:   values:
         ---------   -------
-        ampli       on | off
+        amp_switch  on | off
 
 """
 
@@ -20,8 +20,18 @@ from subprocess import Popen, check_output
 
 UHOME = os.path.expanduser('~')
 
-with open(f'{UHOME}/ecapre/ecapre.config', 'r') as f:
-    CFG = yaml.load(f)
+MAIN_FOLDER = f'{UHOME}/ecapre'
+MACROS_FOLDER = f'{MAIN_FOLDER}/macros'
+LOUD_MON_CTRL = f'{MAIN_FOLDER}/.loudness_control'
+LOUD_MON_VAL  = f'{MAIN_FOLDER}/.loudness_monitor'
+
+with open( f'{MAIN_FOLDER}/ecapre.config' , 'r' ) as f:
+    CFG = yaml.load( f )
+try:
+    AMP_MANAGER =  CFG['aux']['amp_manager']
+except:
+    # This will be printed out to the terminal to advice the user:
+    AMP_MANAGER =  'echo For amp switching please configure config.yml'
 
 def read_command_phrase(command_phrase):
     cmd, arg = None, None
@@ -33,7 +43,8 @@ def read_command_phrase(command_phrase):
     except:
         raise
     try:
-        arg = opcs[1]
+        # allows spaces inside the arg part, e.g. 'run_macro 2_Radio Clasica'
+        arg = ' '.join( opcs[1:] )
     except:
         pass
     return cmd, arg
@@ -52,41 +63,54 @@ def process( cmd, arg ):
     """
     result = ''
 
-    # Inputs list:
-    if cmd == 'get_inputs':
-        inputs = CFG["inputs"]
-        return inputs
-
     # Amplifier switching
     if cmd == 'amp_switch':
         if arg in ('on','off'):
-            print( f'(ecapre_aux) ampli.sh {arg}' )
-            Popen( f'ampli.sh {arg}'.split(), shell=False )
+            print( f'(aux) {AMP_MANAGER.split("/")[-1]} {arg}' )
+            Popen( f'{AMP_MANAGER} {arg}'.split(), shell=False )
         elif arg == 'state':
             try:
-                result = check_output( ['ampli.sh'], shell=False ).decode()
+                with open( f'{UHOME}/.amplifier', 'r') as f:
+                    result =  f.read().strip()
             except:
-                result = 'off'
+                result = '--'
 
     # List of macros under macros/ folder
-    if cmd == 'get_macros':
+    elif cmd == 'get_macros':
         macro_files = []
-        with os.scandir( f'{UHOME}/ecapre/macros' ) as entries:
+        with os.scandir( f'{MACROS_FOLDER}' ) as entries:
             for entrie in entries:
                 fname = entrie.name
                 if ( fname[0] in [str(x) for x in range(1,10)] ) and fname[1]=='_':
                     macro_files.append(fname)
-        result = ','.join(macro_files)
+        result = macro_files
 
     # Run a macro
-    if cmd == 'run_macro':
-        print( f'(ecapre_aux) running macro: {arg}' )
-        Popen( f'{UHOME}/ecapre/macros/{arg}', shell=True)
+    elif cmd == 'run_macro':
+        print( f'(aux) running macro: {arg}' )
+        Popen( f'"{MACROS_FOLDER}/{arg}"', shell=True)
+        result = 'tried'
+
+    # Send reset to the loudness monitor daemon through by its control file
+    elif cmd == 'loudness_monitor_reset':
+        try:
+            with open(LOUD_MON_CTRL, 'w') as f:
+                f.write('reset')
+            result = 'done'
+        except:
+            result = 'error'
+
+    # Get the loudness monitor value from the loudness monitor daemon's output file
+    elif cmd == 'get_loudness_monitor':
+        try:
+            with open(LOUD_MON_VAL, 'r') as f:
+                result = round( float(f.read().strip()), 1)
+        except:
+            result = ''
 
     # Help
     elif '-h' in cmd:
         print(__doc__)
-
 
     return result
 
