@@ -53,6 +53,10 @@ sleep .5
 # https://github.com/deweller/switchaudio-osx
 SwitchAudioSource -s 'JackBridge'
 
+# Setting the Integrated Output level to max so that
+# ecapre will assume the volume control
+osascript -e "set Volume 10"
+
 # Ecasound
 ecasound  --server  -s:"${HOME}"/ecapre/share/ecapre.ecs  1>/dev/null 2>&1 &
 sleep 3
@@ -79,7 +83,7 @@ CONTROL_ADDR=$(grep control_addr $HOME/ecapre/ecapre.config | sed s/\ \ */\ /g |
 CONTROL_PORT=$(grep control_port $HOME/ecapre/ecapre.config | sed s/\ \ */\ /g | cut -d' ' -f2)
 "${HOME}"/ecapre/share/server.py ecapre_control "$CONTROL_ADDR" "$CONTROL_PORT" 1>/dev/null 2>&1 &
 
-# Launching the control TCP service
+# Launching the aux TCP service
 AUX_ADDR=$(grep aux_addr $HOME/ecapre/ecapre.config | sed s/\ \ */\ /g | cut -d' ' -f2)
 AUX_PORT=$(grep aux_port $HOME/ecapre/ecapre.config | sed s/\ \ */\ /g | cut -d' ' -f2)
 "${HOME}"/ecapre/share/server.py ecapre_aux "$AUX_ADDR" "$AUX_PORT" 1>/dev/null 2>&1 &
