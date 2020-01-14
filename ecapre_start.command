@@ -77,12 +77,12 @@ jack_connect  'JackBridge #1:output_1'  'ecasound:in_2'  1>/dev/null 2>&1
 # Launching the control TCP service
 CONTROL_ADDR=$(grep control_addr $HOME/ecapre/ecapre.config | sed s/\ \ */\ /g | cut -d' ' -f2)
 CONTROL_PORT=$(grep control_port $HOME/ecapre/ecapre.config | sed s/\ \ */\ /g | cut -d' ' -f2)
-"${HOME}"/ecapre/share/server.py ecapre_control "$CONTROL_ADDR" "$CONTROL_PORT" &
+"${HOME}"/ecapre/share/server.py ecapre_control "$CONTROL_ADDR" "$CONTROL_PORT" 1>/dev/null 2>&1 &
 
 # Launching the control TCP service
 AUX_ADDR=$(grep aux_addr $HOME/ecapre/ecapre.config | sed s/\ \ */\ /g | cut -d' ' -f2)
 AUX_PORT=$(grep aux_port $HOME/ecapre/ecapre.config | sed s/\ \ */\ /g | cut -d' ' -f2)
-"${HOME}"/ecapre/share/server.py ecapre_aux "$AUX_ADDR" "$AUX_PORT" &
+"${HOME}"/ecapre/share/server.py ecapre_aux "$AUX_ADDR" "$AUX_PORT" 1>/dev/null 2>&1 &
 
 # Launching the control WEB PAGE server
-node "${HOME}"/ecapre/share/www/ecapre_node.js &
+node "${HOME}"/ecapre/share/www/ecapre_node.js 1>/dev/null 2>&1 &
