@@ -66,7 +66,7 @@ tones_roomg_copID=1
           "${HOME}"/ecapre/share/eq/Eq4p_default.yml $tones_roomg_copID
 
 # Restoring ecapre status
-"${HOME}"/ecapre/share/ecapre_control.py restore
+"${HOME}"/ecapre/share/services/ecapre_control.py restore
 
 # Wiring:
 jack_connect  'ecasound:out_1'  'system:playback_1'  1>/dev/null 2>&1
