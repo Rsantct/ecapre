@@ -35,7 +35,7 @@ https://jackaudio.org/downloads/
 
 JackRouter is the key tool to able your Mac OS audio to be routed to the Jack audio server.
 
-JACK OS works well, but you still need to route your Mac OS application's sound (coreaudio domain) to *ecapre* through by Jack. 
+JACK OSX works well, but you still need to route your Mac OS application's sound (coreaudio domain) to *ecapre* through by Jack. 
 
 Unfortunatelly JackRouter is not mantained on Jack OSX anymore, but fortunatelly **madhatter68** has done a great work:
 
