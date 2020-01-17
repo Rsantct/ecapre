@@ -1,0 +1,36 @@
+@prefix atom: <http://lv2plug.in/ns/ext/atom#> .
+@prefix lv2: <http://lv2plug.in/ns/lv2core#> .
+@prefix pset: <http://lv2plug.in/ns/ext/presets#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix state: <http://lv2plug.in/ns/ext/state#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<>
+    a pset:Preset ;
+    lv2:appliesTo <http://gareus.org/oss/lv2/convoLV2#Stereo> ;
+    rdfs:label "drc" ;
+    lv2:port [
+        lv2:symbol "gain" ;
+        pset:value 0.0
+    ] ;
+    state:state [
+        <http://gareus.org/oss/lv2/convoLV2#impulse> <drc_nearfield.wav> ;
+        <http://gareus.org/oss/lv2/convoLV2#state> """convolution.ir.gain.0=5.000000e-01
+convolution.ir.delay.0=0
+convolution.ir.channel.0=1
+convolution.source.0=1
+convolution.output.0=1
+convolution.ir.gain.1=5.000000e-01
+convolution.ir.delay.1=0
+convolution.ir.channel.1=2
+convolution.source.1=2
+convolution.output.1=2
+convolution.ir.gain.2=5.000000e-01
+convolution.ir.delay.2=0
+convolution.ir.channel.2=0
+convolution.source.2=0
+convolution.output.2=0
+convolution.maxsize=1048576
+"""
+    ] .
