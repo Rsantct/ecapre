@@ -11,8 +11,9 @@
         commands:       values:
         ---------       -------
 
-        input           inputName
+        state
         get_inputs
+        input           inputName
         mute            on | off |toggle
         mono            on | off |toggle
 
