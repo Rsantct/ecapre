@@ -1,11 +1,13 @@
 # ecapre
-hi-fi preamp based on Ecasound and libzita-convolver (LV2 plugin implemented at https://github.com/x42/convoLV2)
+
+hi-fi preamp based on Ecasound and optionally libzita-convolver
 
 
 ## Overview
 
 Features:
 
+ - Black-box design (not GUI interface), all runs as a background process
  - Calibrable volume control for reference SPL, with level dependant Loudness EQ compensation.
  - Bass, Treble, Balance
  - Adjustable 'Room gain' and 'House' curves, for subjective target 'in room' response.
@@ -54,7 +56,7 @@ Under Mac OS you need to compile from source. We provide binaries here under `li
 
 If desired, we can use a FIR convolver for DRC (digital room correction) purposes.
 
-**libzita-convolver** is a well known partitioned convolution engine library, from Fons Adriaensen.
+**`libzita-convolver`** is a well known partitioned convolution engine library, from Fons Adriaensen.
 
 http://kokkinizita.linuxaudio.org/linuxaudio/index.html
 
@@ -69,6 +71,11 @@ This LV2 plugin needs a host. As per my Ecasound version is unable to load any L
 
 <a href="url"><img src="https://github.com/Rsantct/ecapre/blob/master/doc/ecapre%20jack%20wiring.png" align="center" width="640" ></a>
 
+## Preamp control
+
+The preamp can be controlled via command line, or through by a web page:
+
+<a href="url"><img src="https://github.com/Rsantct/ecapre/blob/master/doc/ecapre%20control%20web.png" align="center" width="640" ></a>
 
 
 
