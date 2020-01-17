@@ -110,7 +110,7 @@ The preamp can be controlled via command line, or through by a web page:
 
 
     ~$ ./ecapre/share/services/ecapre_control.py state
-    {'balance': 0.0, 'bass': 0.0, 'drc_set': 'drc1', 'house_curve': -2.0, 'input': 'desktopApps', 
+    {'balance': 0.0, 'bass': 0.0, 'drc_set': 'nearfield', 'house_curve': -2.0, 'input': 'desktopApps', 
     'level': -12.0, 'loudness_ref': 0.0, 'loudness_track': True, 'mono': False, 'muted': False, 
     'room_gain': 4.0, 'treble': 0.0}
     
