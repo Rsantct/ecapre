@@ -99,12 +99,11 @@
         td#treble           { width:50%; border: 1px solid grey; border-radius: 10px/10px; }
         td#bass             { width:50%; border: 1px solid grey; border-radius: 10px/10px; }
         td#balance          { width:50%; border: 1px solid grey; border-radius: 10px/10px; }
-        td#target           { width:50%; border: 1px solid grey; border-radius: 10px/10px; }
+        td#drc              { width:50%; border: 1px solid grey; border-radius: 10px/10px; color:grey; }
 
         /* 4th SECTION*/
         table#eq_table      { border: 1px solid grey; border-radius: 10px/10px; }
         td#xo               { border: none; width: 33%; }
-        td#drc              { border: none; width: 33%; }
         td#peq              { border: none; width: 33%; color:grey; }
 
         /* 5th SECTION */
@@ -317,7 +316,7 @@
         <tr>
             <td id="treble">
                 <button type="button"                 onmousedown="control_cmd('treble -1 add')"  >-</button>
-                <span id="trebleInfo">treble</span>
+                <span id="trebleInfo">TREBLE</span>
                 <button type="button"                 onmousedown="control_cmd('treble +1 add')"  >+</button>
             </td>
             <td id="balance">
@@ -329,10 +328,13 @@
         <tr>
             <td id="bass">
                 <button type="button"                 onmousedown="control_cmd('bass   -1 add')"  >-</button>
-                <span id="bassInfo">bass</span>
+                <span id="bassInfo">BASS</span>
                 <button type="button"                 onmousedown="control_cmd('bass   +1 add')"  >+</button>
             </td>
-            <td id="target">
+            <td id="drc">
+                <span id="span_drc" style="display:inline-block;">[drc]
+                </span>
+            </td>
             </td>
         </tr>
     </table>
