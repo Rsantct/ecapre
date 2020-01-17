@@ -73,6 +73,21 @@ function fill_in_page_header_and_selectors(){
                             JSON.parse(control_cmd('aux system_name')) +' :: ';
     // Filling in the selectors: inputs
     fill_in_inputs_selector();
+
+    // DRC info
+    try{
+        var status = JSON.parse( control_cmd('get_state') );
+    }catch{
+        return;
+    }
+    if ( status['drc_set'] != 'none'){
+        document.getElementById("drc").style.color = "white";
+        document.getElementById("drc").innerHTML = "DRC: " + status['drc_set'];
+    }
+    else {
+        document.getElementById("drc").style.color = "grey";
+        document.getElementById("drc").innerHTML = "(no drc)";
+    }
 }
 
 // Queries the system status and updates the page (only runtime variable items):
