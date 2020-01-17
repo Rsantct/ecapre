@@ -76,7 +76,10 @@ tones_roomg_copID=1
 "${HOME}"/ecapre/share/eca_Eq4p_ctrl.py \
           "${HOME}"/ecapre/share/eq/Eq4p_default.yml $tones_roomg_copID
 
-# Restoring ecapre status
+# Trying to update the FIR drc_set from the convoLV2 plugin settings
+"${HOME}"/ecapre/share/LV2drc2state.py
+
+# Restoring Ecasound stages as per ecapre/.state.yml on disk
 "${HOME}"/ecapre/share/services/ecapre_control.py restore
 
 # Wiring:
