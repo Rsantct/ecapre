@@ -1,6 +1,7 @@
 # ecapre
 
-hi-fi preamp based on Ecasound and optionally libzita-convolver.
+An hi-fi preamp based on Ecasound and optionally libzita-convolver.
+
 
 ## Overview
 
@@ -15,7 +16,7 @@ Features:
 
 This project is intended to work on a Mac OS, and of course under a Linux machine.
 
-For a more precise, flexible and powerfull audio system, including FIR filtering, active loudspeaker xover, and more features, you can go to [pe.audio.sys](https://github.com/Rsantct/pe.audio.sys) (currently only under Linux).
+For a more precise, flexible and powerfull audio system, including FIR filtering, active loudspeaker xover, and more features, you can take a look into **[pe.audio.sys](https://github.com/Rsantct/pe.audio.sys)** (currently only under Linux).
 
 ## Mac OS
 
