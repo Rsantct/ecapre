@@ -2,4 +2,4 @@
 
 "${HOME}"/ecapre/share/scripts/istreams.py stop
 sleep 1
-"${HOME}"/ecapre/share/scripts/istreams.py start 1
+"${HOME}"/ecapre/share/scripts/istreams.py start 2
