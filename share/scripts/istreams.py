@@ -107,10 +107,10 @@ if __name__ == '__main__':
 
     ### Reading the stations presets file
     try:
-        with open(f'{UHOME}/ecapre/istreams.yml', 'r') as f:
+        with open(f'{UHOME}/ecapre/istreams.config', 'r') as f:
             presets = yaml.load(f)
     except:
-        print ( '(istreams.py) ERROR reading \'ecapre/istream.yml\'' )
+        print ( '(istreams.py) ERROR reading \'ecapre/istreams.config\'' )
         sys.exit()
 
     ### Reading the command line
