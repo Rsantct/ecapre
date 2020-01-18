@@ -57,7 +57,7 @@ Under Mac OS you need to compile from source. We provide binaries here under `li
 
 If desired, we can use a FIR convolver for DRC (digital room correction) purposes.
 
-**`libzita-convolver`** is a well known partitioned convolution engine library, from Fons Adriaensen.
+**`libzita-convolver`** is a well known partitioned convolution engine library, by Fons Adriaensen.
 
 http://kokkinizita.linuxaudio.org/linuxaudio/index.html
 
