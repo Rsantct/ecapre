@@ -13,17 +13,18 @@ For example
 ```
 $ ls -1 ecapre/macros/
 1_RNE
-2_R.Clasica
-6_flat sound
+2_Radio_Clasica
+3_Radio_3
+7_Radio-OFF
 README.md
 ```
 
 Will show the following key pad layout:
 
 ```
-    [     RNE     ]  [  R.Clasica  ]  [    --      ]
-    [     --      ]  [     --      ]  [ flat sound ]
-    [     --      ]  [     --      ]  [    --      ]
+    [      RNE       ]  [ Radio_Clasica ]  [    Radio_3    ]
+    [      --        ]  [       --      ]  [      --       ]
+    [   Radio-OFF    ]  [       --      ]  [      --       ]
 ```
 
 **NOTICE:** if no macro files `N_xxxx` were defined under `~/ecpre/macros/`
