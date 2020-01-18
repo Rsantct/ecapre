@@ -88,8 +88,7 @@ def select_input(input_name):
         eca.ecanet( 'jack-connect     JackBridge\ #1:output_1   convoLV2:in_2' )
 
 def set_level(chain, dB, balance):
-    """ This is for the -eadb preset as the first chain operator.
-        It works with dB values
+    """ This acts over the last chain operator -eadb, which works with dB values
     """
     ch_value = dB + REF_SPL_GAIN - HEADROOM + balance/2.0 * {'L':-1, 'R':1}[chain]
     cmds = [ f'c-select {chain}', f'cop-set {CFG["AMP_COP_IDX"]},1,{str(ch_value)}' ]
@@ -133,14 +132,8 @@ def restore():
         # Level
         set_level(chain, state['level'] - 3.0 * state['mono'], state['balance'])
 
-        # Setting Loudness level compensation, by following
-        # the attenuation dB below level=0dB (reference SPL)
-        loud_level = max( min( -state['level'], MAX_LOUD_COMPENS), MIN_LOUD_COMPENS)
-        Eq10.apply_loudness( CFG['LOUD_COP_IDX'], loud_level )
-
-        # Loudness_track
-        if not state['loudness_track']:
-            Eq10.apply_loudness( CFG['LOUD_COP_IDX'], 0.0 )
+        # Loudness compensation
+        apply_loudness(state)
 
         # Tone
         Eq4p.set_tone(cop_idx=CFG['TONE_COP_IDX'], band='bass',
@@ -154,6 +147,18 @@ def restore():
         Eq10.apply_target(    cop_idx = CFG['HOUSE_COP_IDX'],
                               room_gain = 0.0,
                               house_atten = -state['house_curve'] )
+
+def apply_loudness(state):
+    if state['loudness_track']:
+        # Setting Loudness level compensation, by following
+        # the attenuation dB below level=0dB (reference SPL)
+        # The loudness_ref value is applied as an inverse offset.
+        # The actual level of compensation will be limited.
+        loud_level = max( min( -state['level'] - state['loudness_ref'],
+                        MAX_LOUD_COMPENS), MIN_LOUD_COMPENS)
+        Eq10.apply_loudness( CFG['LOUD_COP_IDX'], loud_level )
+    else:
+        Eq10.apply_loudness( CFG['LOUD_COP_IDX'], 0.0 )
 
 def read_command_phrase(command_phrase):
     cmd, arg, relative = '', '', False
@@ -223,14 +228,12 @@ def process( cmd, arg, relative ):
 
     # Mono management
     elif cmd == 'mono':
-
         # arg can be 'on'|'off'|'toggle'
         # state options are boolean
         mono_act = { 'on':      True,
                      'off':     False,
                      'toggle':  {True:False, False:True}[state['mono']]
                   }[arg]
-
         if mono_act:
             cross_chains('on')
             for chain in 'L','R':
@@ -239,7 +242,6 @@ def process( cmd, arg, relative ):
             cross_chains('off')
             for chain in 'L','R':
                 set_level(chain, state['level'] + 3.0 , state['balance'])
-
         state['mono'] = mono_act
 
     # Level adjustment
@@ -248,15 +250,10 @@ def process( cmd, arg, relative ):
             level = state['level'] + float(arg)
         else:
             level = float(arg)
-
         for chain in 'L','R':
             set_level(chain, level - 3.0 * state['mono'], state['balance'])
-
-        # Setting Loudness level compensation, by following
-        # the attenuation dB below level=0dB (reference SPL)
-        loud_level = max( min( -level, MAX_LOUD_COMPENS), MIN_LOUD_COMPENS)
-        Eq10.apply_loudness( CFG['LOUD_COP_IDX'], loud_level )
         state['level'] = level
+        apply_loudness(state)
 
     # Balance
     elif cmd in ('balance', 'bal') and isFloat(arg):
@@ -271,27 +268,19 @@ def process( cmd, arg, relative ):
 
     # Loudness_track management
     elif cmd in ('loud', 'loudness', 'loudness_track'):
-
         # arg can be 'on'|'off'|'toggle'
         # state options are boolean
-        ld_act = { 'on':      True,
+        loudOnOff = { 'on':      True,
                    'off':     False,
                    'toggle':  {True:False, False:True}[state['loudness_track']]
                   }[arg]
-
-        if ld_act:
-            loud_level = max( min( -state['level'], MAX_LOUD_COMPENS),
-                              MIN_LOUD_COMPENS)
-            Eq10.apply_loudness( CFG['LOUD_COP_IDX'], loud_level )
-        else:
-            Eq10.apply_loudness( CFG['LOUD_COP_IDX'], 0.0 )
-
-        state['loudness_track'] = ld_act
+        state['loudness_track'] = loudOnOff
+        apply_loudness(state)
 
     # Loudness reference management
     elif cmd == 'loudness_ref' and isFloat(arg):
-        # !!!! WIP !!!!
-        result = 'WIP'
+        state['loudness_ref'] = round(float(arg),1)
+        apply_loudness(state)
 
     # Bass & Treble setting
     elif cmd in ('bass','treble') and isFloat(arg):
