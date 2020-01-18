@@ -65,7 +65,7 @@ F.A. provides also **`jconvolver`**, a Jack wrapper to run lib-zitaconvolver in 
 
 So we have chosen to use [x42/convoLV2](https://github.com/x42/convoLV2), a well known LV2 plugin based on libzita-convolver.
 
-This LV2 plugin needs a host. As per my Ecasound version is unable to load any LV2 plugis, we have chosen [jalv](https://github.com/drobilla/jalv) a minimalist LV2 host that runs on Jack.
+This LV2 plugin needs a host. As per my Ecasound version is unable to load any LV2 plugins, we have chosen [drobilla/jalv](https://github.com/drobilla/jalv) a minimalist LV2 host that runs on Jack.
 
 
 ## Wiring
