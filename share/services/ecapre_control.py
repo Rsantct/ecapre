@@ -71,12 +71,21 @@ def cross_chains(mode):
         eca.ecanet( 'jack-disconnect ecasound:out_2 system:playback_1' )
 
 def select_input(input_name):
-    if input_name == 'analog':
-        eca.ecanet( 'jack-connect system:capture_1 ecasound:in_1' )
-        eca.ecanet( 'jack-connect system:capture_2 ecasound:in_2' )
+    if input_name == 'none':
+        eca.ecanet( 'jack-disconnect  system:capture_1          convoLV2:in_1' )
+        eca.ecanet( 'jack-disconnect  system:capture_2          convoLV2:in_2' )
+        eca.ecanet( 'jack-disconnect  JackBridge\ #1:output_0   convoLV2:in_1' )
+        eca.ecanet( 'jack-disconnect  JackBridge\ #1:output_1   convoLV2:in_2' )
+    elif input_name == 'analog':
+        eca.ecanet( 'jack-connect     system:capture_1          convoLV2:in_1' )
+        eca.ecanet( 'jack-connect     system:capture_2          convoLV2:in_2' )
+        eca.ecanet( 'jack-disconnect  JackBridge\ #1:output_0   convoLV2:in_1' )
+        eca.ecanet( 'jack-disconnect  JackBridge\ #1:output_1   convoLV2:in_2' )
     else:
-        eca.ecanet( 'jack-disconnect system:capture_1 ecasound:in_1' )
-        eca.ecanet( 'jack-disconnect system:capture_2 ecasound:in_2' )
+        eca.ecanet( 'jack-disconnect  system:capture_1          convoLV2:in_1' )
+        eca.ecanet( 'jack-disconnect  system:capture_2          convoLV2:in_2' )
+        eca.ecanet( 'jack-connect     JackBridge\ #1:output_0   convoLV2:in_1' )
+        eca.ecanet( 'jack-connect     JackBridge\ #1:output_1   convoLV2:in_2' )
 
 def set_level(chain, dB, balance):
     """ This is for the -eadb preset as the first chain operator.
