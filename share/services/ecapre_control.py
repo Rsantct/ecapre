@@ -230,11 +230,11 @@ def process( cmd, arg, relative ):
     elif cmd == 'mono':
         # arg can be 'on'|'off'|'toggle'
         # state options are boolean
-        mono_act = { 'on':      True,
-                     'off':     False,
-                     'toggle':  {True:False, False:True}[state['mono']]
+        monoOnOff = { 'on':      True,
+                      'off':     False,
+                      'toggle':  {True:False, False:True}[state['mono']]
                   }[arg]
-        if mono_act:
+        if monoOnOff:
             cross_chains('on')
             for chain in 'L','R':
                 set_level(chain, state['level'] - 3.0 , state['balance'])
@@ -242,7 +242,7 @@ def process( cmd, arg, relative ):
             cross_chains('off')
             for chain in 'L','R':
                 set_level(chain, state['level'] + 3.0 , state['balance'])
-        state['mono'] = mono_act
+        state['mono'] = monoOnOff
 
     # Level adjustment
     elif cmd == 'level' and isFloat(arg):
