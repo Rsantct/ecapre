@@ -52,6 +52,7 @@ TONE_SPAN        =  CFG['tone_span']
 BALANCE_SPAN     =  CFG['balance_span']
 REF_SPL_GAIN     =  CFG['ref_spl_gain']
 STATE_FNAME      =  f'{UHOME}/ecapre/.state.yml'
+PRE_IN_PORTS     =  'convoLV2:in_1', 'convoLV2:in_2'
 
 def isFloat(s):
     if not s:
@@ -71,21 +72,26 @@ def cross_chains(mode):
         eca.ecanet( 'jack-disconnect ecasound:out_2 system:playback_1' )
 
 def select_input(input_name):
+    try:
+        target_srcs = CFG["inputs"].remove(input_name)
+    except:
+        target_srcs = CFG["inputs"]
+    # disconnecting
+    for target_src in target_srcs:
+        tar_ports = CFG["inputs"][target_src]
+        tar_ports = [ x.replace(' ', '\ ') for x in tar_ports] # escape spaces
+        eca.ecanet( f'jack-disconnect  {tar_ports[0]}  {PRE_IN_PORTS[0]}' )
+        eca.ecanet( f'jack-disconnect  {tar_ports[1]}  {PRE_IN_PORTS[1]}' )
     if input_name == 'none':
-        eca.ecanet( 'jack-disconnect  system:capture_1          convoLV2:in_1' )
-        eca.ecanet( 'jack-disconnect  system:capture_2          convoLV2:in_2' )
-        eca.ecanet( 'jack-disconnect  JackBridge\ #1:output_0   convoLV2:in_1' )
-        eca.ecanet( 'jack-disconnect  JackBridge\ #1:output_1   convoLV2:in_2' )
-    elif input_name == 'analog':
-        eca.ecanet( 'jack-connect     system:capture_1          convoLV2:in_1' )
-        eca.ecanet( 'jack-connect     system:capture_2          convoLV2:in_2' )
-        eca.ecanet( 'jack-disconnect  JackBridge\ #1:output_0   convoLV2:in_1' )
-        eca.ecanet( 'jack-disconnect  JackBridge\ #1:output_1   convoLV2:in_2' )
-    else:
-        eca.ecanet( 'jack-disconnect  system:capture_1          convoLV2:in_1' )
-        eca.ecanet( 'jack-disconnect  system:capture_2          convoLV2:in_2' )
-        eca.ecanet( 'jack-connect     JackBridge\ #1:output_0   convoLV2:in_1' )
-        eca.ecanet( 'jack-connect     JackBridge\ #1:output_1   convoLV2:in_2' )
+        return
+    # connecting
+    try:
+        src_ports = CFG["inputs"][input_name]
+        src_ports = [ x.replace(' ', '\ ') for x in src_ports] # escape spaces
+        eca.ecanet( f'jack-connect  {src_ports[0]}  {PRE_IN_PORTS[0]}' )
+        eca.ecanet( f'jack-connect  {src_ports[1]}  {PRE_IN_PORTS[1]}' )
+    except:
+        pass
 
 def set_level(chain, dB, balance):
     """ This acts over the last chain operator -eadb, which works with dB values
@@ -211,7 +217,7 @@ def process( cmd, arg, relative ):
 
     # Get inputs
     elif cmd == 'get_inputs':
-        result = CFG["inputs"]
+        result = list( CFG["inputs"].keys() )
 
     # Mute
     elif cmd == 'mute' and arg in ('on','off','toggle'):
