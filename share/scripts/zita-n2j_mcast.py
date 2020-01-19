@@ -15,7 +15,7 @@ import subprocess as sp
 from os import uname
 
 # Additional buffering (ms) (default 10, safe value 50, WiFi 100)
-BUFFER = 100
+BUFFER = 50
 
 def get_default_interface():
     # Getting the machine's used interface name
