@@ -34,6 +34,9 @@ killall -KILL jackdmp
 
 # Exit if just want to stop
 if [[ $1 == 'stop' ]]; then
+    # Setting JackBridge as the default system's sound device
+    # https://github.com/deweller/switchaudio-osx
+    SwitchAudioSource -s 'Built-in Output'
     echo "Stopped: Ecasound, JackBridge, Jack."
     exit 0
 fi
