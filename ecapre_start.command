@@ -40,12 +40,12 @@ if [[ $1 == 'stop' ]]; then
 clear
     echo "Stopped: Ecasound, JackBridge, Jack."
     echo
-    echo "                                     "
-    echo "    --  ---  --   --   --   -- ---   "
-    echo "   |__   |  |  | |__| |__| |   |  |  "
-    echo "      \  |  |  | |    |    |-- |  |  "
-    echo "   ___|  |  |__| |    |    |__ |__/  "
-    echo "                                     "
+    echo "                                      "
+    echo "     --  ---  --   --   --   -- ---   "
+    echo "    |__   |  |  | |__| |__| |   |  |  "
+    echo "       \  |  |  | |    |    |-- |  |  "
+    echo "    ___|  |  |__| |    |    |__ |__/  "
+    echo "                                      "
     sleep 3
     exit 0
 fi
@@ -116,12 +116,12 @@ AUX_PORT=$(grep aux_port $HOME/ecapre/ecapre.config | sed s/\ \ */\ /g | cut -d'
 node "${HOME}"/ecapre/share/www/ecapre_node.js 1>/dev/null 2>&1 &
 
 clear
-echo "                                          __ "
-echo "         --   |  |  |  |  |  |  |  |  |  |   "
-echo "        |  |  |  |  |\\ |  |\\ |  |  |\\ |  | _ "
-echo "        |--   |  |  | \\|  | \\|  |  | \\|  |  \\"
-echo "        |  \\  |__|  |  |  |  |  |  |  |  |__|"
-echo "                                             "
+echo "                                      __      "
+echo "     --   |  |  |  |  |  |  |  |  |  |        "
+echo "    |  |  |  |  |\\ |  |\\ |  |  |\\ |  | _   "
+echo "    |--   |  |  | \\|  | \\|  |  | \\|  |  \\ "
+echo "    |  \\  |__|  |  |  |  |  |  |  |  |__|    "
+echo "                                              "
 sleep 3
 exit 0
 
