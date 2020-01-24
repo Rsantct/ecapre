@@ -37,7 +37,8 @@ if [[ $1 == 'stop' ]]; then
     # Setting JackBridge as the default system's sound device
     # https://github.com/deweller/switchaudio-osx
     SwitchAudioSource -s 'Built-in Output'
-clear
+    osascript -e "set Volume 3.5"
+    clear
     echo "Stopped: Ecasound, JackBridge, Jack."
     echo
     echo "                                      "
