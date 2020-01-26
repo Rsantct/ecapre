@@ -218,12 +218,9 @@ function fill_in_macro_buttons() {
     try{
         var macros = JSON.parse( control_cmd( 'aux get_macros' ).split(',') );
     }catch{
-    // If no macros list, do nothing, so leaving "display:none" on the buttons keypad div
+    // If no macros list, do nothing
         return
     }
-    // If any macro found, lets show the macros toggle switch
-    document.getElementById( "playback_control_23").style.display = 'block';
-    document.getElementById( "playback_control_21").style.display = 'block'; // just for symmetry reasons
     var macro = ''
     for (i in macros) {
         macro = macros[i];
@@ -240,16 +237,6 @@ function user_macro(prefix, name) {
 
 
 ///////////////  MISCEL INTERNAL ////////////
-// Aux to toggle displaying macro buttons
-function macros_toggle() {
-    var curMode = document.getElementById( "macro_buttons").style.display;
-    if (curMode == 'none') {
-        document.getElementById( "macro_buttons").style.display = 'inline-table'
-    }
-    else {
-        document.getElementById( "macro_buttons").style.display = 'none'
-    }
-}
 // Aux to clearing selector elements to avoid repeating
 // when audio processes have changed
 function select_clear_options(ElementId){
