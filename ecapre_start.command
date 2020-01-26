@@ -116,6 +116,9 @@ AUX_PORT=$(grep aux_port $HOME/ecapre/ecapre.config | sed s/\ \ */\ /g | cut -d'
 # Launching the control WEB PAGE server
 node "${HOME}"/ecapre/share/www/ecapre_node.js 1>/dev/null 2>&1 &
 
+# Launching the control WEB page
+"${HOME}"/ecapre/ecapre_web.command
+
 clear
 echo "                                      __      "
 echo "     --   |  |  |  |  |  |  |  |  |  |        "
