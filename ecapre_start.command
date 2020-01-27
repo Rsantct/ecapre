@@ -48,6 +48,7 @@ if [[ $1 == 'stop' ]]; then
     echo "    ___|  |  |__| |    |    |__ |__/  "
     echo "                                      "
     sleep 3
+    # Close any safari tab
     "${HOME}"/ecapre/share/scripts/ecapre_web.command stop
     exit 0
 fi
