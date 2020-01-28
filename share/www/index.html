@@ -82,7 +82,8 @@
                 }
 
         /* 1st SECTION: lside: shows the loudspeaker, rside: advanced toggler */
-        td#main_lside       { width:  95%; text-align: center; border: 1px solid white; border-radius: 10px/10px; }
+        td#main_lside       { width:   5%; text-align: center; border: none; }
+        td#main_cside       { width:  90%; text-align: center; border: 1px solid white; border-radius: 10px/10px; }
         td#main_rside       { width:   5%; text-align: center; border: none; }
 
         /* 2nd SECTION */
@@ -207,7 +208,10 @@
     <div>
     <table id="main_title" >
         <tr>
-            <td id="main_lside"></td>
+            <td id="main_lside" style="display:none">
+                <button id="reboot_switch" title="REBOOT" style="font-size:0.7em" onclick="control_cmd('aux restart')">&#9851;</button>
+            </td>
+            <td id="main_cside"></td>
             <td id="main_rside">
                 <button id="advanced_switch" title="advanced controls" style="font-size:0.7em" onclick="advanced_toggle()">&#9881;</button>
             </td>
@@ -234,7 +238,7 @@
 
             <!-- LOUDNESS control -->
             <td id="LoudnessInfo">
-                <button type="button" id="buttonLoud" onmousedown="control_cmd('loudness_track toggle')" >L</button>
+                <button type="button" id="buttonLoud" onmousedown="loudness_toggle()">L</button>
             </td>
 
             <!-- INPUTS selector, will be filled by javascript -->
@@ -247,7 +251,7 @@
         <tr>
             <!-- MONO / STEREO control -->
             <td id="MonoInfo">
-                <button type="button" id="buttonMono" onmousedown="control_cmd('mono toggle')"           >M</button>
+                <button type="button" id="buttonMono" onmousedown="mono_toggle()">M</button>
             </td>
         </tr>
     </table>
@@ -262,11 +266,11 @@
             </td>
             <!-- 1 dB MAIN VOLUME and MUTE buttons -->
             <td id="level_buttons12">
-                <button type="button" onmousedown="control_cmd('level -1 add')" >
+                <button type="button" onmousedown="audio_change('level', -1)" >
                         &nbsp;-1&nbsp;</button>
-                <button type="button" onmousedown="control_cmd('mute toggle')" id="buttonMute" >
+                <button type="button" onmousedown="mute_toggle()" id="buttonMute" >
                         &nbsp;&nbsp;0&nbsp;&nbsp;</button>
-                <button type="button" onmousedown="control_cmd('level +1 add')" >
+                <button type="button" onmousedown="audio_change('level', +1)" >
                         &nbsp;+1&nbsp;</button>
             </td>
             <td id="level_buttons13">
@@ -277,9 +281,9 @@
             </td>
             <!-- 3 dB MAIN VOLUME buttons -->
             <td id="level_buttons22">
-                <button type="button" onmousedown="control_cmd('level -3 add')" >
+                <button type="button" onmousedown="audio_change('level', -3)" >
                         &nbsp;&nbsp;&nbsp;-3&nbsp;&nbsp;&nbsp;</button>
-                <button type="button" onmousedown="control_cmd('level +3 add')" >
+                <button type="button" onmousedown="audio_change('level', +3)" >
                         &nbsp;&nbsp;&nbsp;+3&nbsp;&nbsp;&nbsp;</button>
             </td>
             <!-- 2 dB MONITOR VOLUME buttons -->
@@ -306,7 +310,7 @@
             <td class="loud_slider_container">
             <input  id="loud_slider" class="loud_slider" type="range"
                     min="-15.0" step="1" max="15.0"
-                    oninput="loudness_ref_change(this.value)">
+                    oninput="control_cmd('loudness_ref ' + this.value)">
             </td>
         </tr>
     </table>
@@ -315,21 +319,21 @@
     <table>
         <tr>
             <td id="treble">
-                <button type="button"                 onmousedown="control_cmd('treble -1 add')"  >-</button>
+                <button type="button"                 onmousedown="audio_change('treble', -1)"  >-</button>
                 <span id="trebleInfo">TREBLE</span>
-                <button type="button"                 onmousedown="control_cmd('treble +1 add')"  >+</button>
+                <button type="button"                 onmousedown="audio_change('treble', +1)"  >+</button>
             </td>
             <td id="balance">
-                <button type="button"                 onmousedown="control_cmd('balance -1 add')"  >-</button>
+                <button type="button"                 onmousedown="audio_change('balance', -1)"  >-</button>
                 <span id="balInfo">BAL</span>
-                <button type="button"                 onmousedown="control_cmd('balance +1 add')"  >+</button>
+                <button type="button"                 onmousedown="audio_change('balance', +1)"  >+</button>
             </td>
         </tr>
         <tr>
             <td id="bass">
-                <button type="button"                 onmousedown="control_cmd('bass   -1 add')"  >-</button>
+                <button type="button"                 onmousedown="audio_change('bass', -1)"  >-</button>
                 <span id="bassInfo">BASS</span>
-                <button type="button"                 onmousedown="control_cmd('bass   +1 add')"  >+</button>
+                <button type="button"                 onmousedown="audio_change('bass', +1)"  >+</button>
             </td>
             <td id="drc">
                 <span id="span_drc" style="display:inline-block;">[drc]
@@ -363,10 +367,9 @@
     </table>
     </div>
 
-    <!-- UNCOMMENT TO TEST JAVASCRIPT FUNCTIONS WITH THESE BUTTONs
+    <!-- UNCOMMENT TO TEST JAVASCRIPT FUNCTIONS WITH THIS BUTTON
     <div>
-        <button type="button"                 onclick="control_cmd('dummy')" >dummy</button>
-        <button type="button"                 onclick="control_cmd('aux get_macros')" >get macros</button>
+        <button type="button"                 onclick="TESTING()" >TEST</button>
     </div>
     -->
 
