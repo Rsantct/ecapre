@@ -1,25 +1,13 @@
 #!/bin/bash
 
-echo "(!) REMEMBER TO USE THE CURRENT SAMPLE RATE WHEN STARTING JACKD"
-FS=44100
-PERIOD_SIZE=128
-
-
-# 'Built-in Microphone', 'Built-in Output'
-CAP_DEV='AppleHDAEngineInput:1B,0,1,0:1'
-PBK_DEV='AppleHDAEngineOutput:1B,0,1,1:0'
-
-### 'USB Audio CODEC ' (Behringer UCA-202)
-##CAP_DEV='AppleUSBAudioEngine:Burr-Brown from TI              :USB Audio CODEC :14100000:2'
-##PBK_DEV='AppleUSBAudioEngine:Burr-Brown from TI              :USB Audio CODEC :14100000:1'
+CFILE="$HOME"/ecapre/ecapre.config
 
 # This is for custom installed LADSPA plugins
 export LADSPA_PATH=$LADSPA_PATH:"${HOME}"/ecapre/lib/ladspa
-
 echo "(i) LADSPA_PATH=""$LADSPA_PATH"
 
 # killing the WEB PAGE server
-pkill -f 'node ecapre'
+pkill -KILL -f 'node ecapre'
 
 # killing the CONTROL and AUX TCP servers
 pkill -f 'server.py ecapre_control'
@@ -31,6 +19,7 @@ killall -KILL ecasound
 killall -KILL JackBridge
 killall -KILL jackdmp
 #killall -KILL qjackctl
+sleep 1
 
 # Exit if just want to stop
 if [[ $1 == 'stop' ]]; then
@@ -54,10 +43,19 @@ if [[ $1 == 'stop' ]]; then
 fi
 
 # Jack
-/usr/local/bin/./jackdmp \
-    -R -d coreaudio -r "$FS" -p "$PERIOD_SIZE" -o 2 -i 2 \
-    -C  "$CAP_DEV" \
-    -P  "$PBK_DEV" &
+FS=$(grep ^FS: $CFILE | cut -d":" -f2)
+PERIOD_SIZE=$(grep ^PERIOD_SIZE: $CFILE | cut -d":" -f2)
+PBK_PORTS=$(grep ^PBK_PORTS: $CFILE | cut -d":" -f2)
+CAP_PORTS=$(grep ^CAP_PORTS: $CFILE | cut -d":" -f2)
+PBK_DEVICE=$(grep ^PBK_DEVICE: $CFILE | cut -d":" -f2-)
+CAP_DEVICE=$(grep ^CAP_DEVICE: $CFILE | cut -d":" -f2-)
+JACK_OPT=" -R -d coreaudio"
+JACK_OPT+=" --rate ""$FS"" --period ""$PERIOD_SIZE"
+JACK_OPT+=" -P ""$PBK_DEVICE"" -o ""$PBK_PORTS"
+if [[ "$CAP_PORTS" -ge 2 ]]; then
+    JACK_OPT+=" -C ""$CAP_DEVICE"" -i ""$CAP_PORTS"
+fi
+/usr/local/bin/jackdmp $JACK_OPT &
 sleep 2.0
 
 # Qjackctl (optional just to check if things runs well)
@@ -127,8 +125,12 @@ echo "     --   |  |  |  |  |  |  |  |  |  |        "
 echo "    |  |  |  |  |\\ |  |\\ |  |  |\\ |  | _   "
 echo "    |--   |  |  | \\|  | \\|  |  | \\|  |  \\ "
 echo "    |  \\  |__|  |  |  |  |  |  |  |  |__|    "
-echo "                                              "
-sleep 3
+echo ""
+echo "--------------------------------------------------------------------------"
+echo "(!) Remember to check that the current sample rate of 'JackBridge' under"
+echo "    your 'Audio MIDI Configuration' settings matches to the one used"
+echo "    by jackdmp, i.e. the FS: xxxxxx value inside the 'ecapre.config' file."
+echo "--------------------------------------------------------------------------"
+
+sleep 10
 exit 0
-
-
