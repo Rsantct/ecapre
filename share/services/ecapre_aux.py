@@ -33,6 +33,20 @@ except:
     # This will be printed out to the terminal to advice the user:
     AMP_MANAGER =  'echo For amp switching please configure config.yml'
 
+def player(action):
+    # BETA version only works with Spotify under Mac OS
+    try:
+        if action == 'prev':
+            Popen( f'osascript -e \'tell application \"Spotify\" to previous track\'', shell=True )
+        elif action == 'next':
+            Popen( f'osascript -e \'tell application \"Spotify\" to next track\'', shell=True )
+        elif action == 'play_pause':
+            Popen( f'osascript -e \'tell application \"Spotify\" to playpause\'', shell=True )
+        elif action == 'stop':
+            Popen( f'osascript -e \'tell application \"Spotify\" to playpause\'', shell=True )
+    except:
+        return
+
 def read_command_phrase(command_phrase):
     cmd, arg = None, None
     # This is to avoid empty values when there are more
@@ -111,6 +125,10 @@ def process( cmd, arg ):
                 result = round( float(f.read().strip()), 1)
         except:
             result = ''
+
+    # Playback control
+    elif cmd == 'player':
+        player(arg)
 
     # Help
     elif '-h' in cmd:
