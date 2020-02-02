@@ -6,6 +6,9 @@ CFILE="$HOME"/ecapre/ecapre.config
 export LADSPA_PATH=$LADSPA_PATH:"${HOME}"/ecapre/lib/ladspa
 echo "(i) LADSPA_PATH=""$LADSPA_PATH"
 
+# killing the IR receiver
+pkill -KILL -f 'ir.py'
+
 # killing the WEB PAGE server
 pkill -KILL -f 'node ecapre'
 
@@ -27,6 +30,8 @@ if [[ $1 == 'stop' ]]; then
     # https://github.com/deweller/switchaudio-osx
     SwitchAudioSource -s 'Built-in Output'
     osascript -e "set Volume 3.5"
+    # Close any safari tab
+    "${HOME}"/ecapre/share/scripts/ecapre_web.command stop
     clear
     echo "Stopped: Ecasound, JackBridge, Jack."
     echo
@@ -37,8 +42,6 @@ if [[ $1 == 'stop' ]]; then
     echo "    ___|  |  |__| |    |    |__ |__/  "
     echo "                                      "
     sleep 3
-    # Close any safari tab
-    "${HOME}"/ecapre/share/scripts/ecapre_web.command stop
     exit 0
 fi
 
@@ -119,6 +122,9 @@ node "${HOME}"/ecapre/share/www/ecapre_node.js 1>/dev/null 2>&1 &
 # Launching the control WEB page
 "${HOME}"/ecapre/share/scripts/ecapre_web.command
 
+# Launching the IR receiver
+"${HOME}"/ecapre/share/scripts/ir.py 1>/dev/null 2>&1 &
+
 clear
 echo "                                      __      "
 echo "     --   |  |  |  |  |  |  |  |  |  |        "
@@ -134,3 +140,5 @@ echo "--------------------------------------------------------------------------
 
 sleep 10
 exit 0
+
+
