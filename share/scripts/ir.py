@@ -111,6 +111,7 @@ if __name__ == "__main__":
         cmd = rx2cmd(rx, keymap)
         if test_mode:
             print(rx, cmd)
+            continue
         if cmd:
             if time() - lastTimeStamp >= antibound:
                 send_cmd(cmd)
