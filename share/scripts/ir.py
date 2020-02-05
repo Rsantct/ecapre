@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
 """
-    Beta version. It works if the received data when a key is pressed has a
-    fixed word length, like my Panasonic TV remote.
-    TODO: new routine to decode variable length remote.
-
     You need an FTDI FT23xx USB UART with a 3 pin IR receiver at 38 KHz,
     e.g. TSOP31238 or TSOP38238.
 
@@ -38,12 +34,13 @@ def send_cmd(cmd):
             s.send( cmd.encode() )
             s.close()
         except:
+            pass
             print (f'(ir.py) ecapre service \'{svcName}\' socket error port {port}')
     return
 
-def rx2cmd(w, keymap):
+def irpacket2cmd(p, keymap):
     try:
-        return keymap[ str(w) ]
+        return keymap[ str(p) ]
     except:
         return ''
 
@@ -64,6 +61,45 @@ def serial_params(d):
         stopbits = d['stopbits']
     return baudrate, bytesize, parity, stopbits
 
+def main_EOP():
+    # LOOPING: reading byte by byte as received
+    lastTimeStamp = time() # helper to avoid bouncing
+    irpacket = b''
+    while True:
+        rx  = s.read( 1 )
+        # Detecting EndOfPacket byte with some tolerance,
+        # or fixed length packets depending on remote:
+        if  abs( int.from_bytes(rx, "big") -
+                 int.from_bytes(endOfPacket, "big") ) <= 5:
+            #print(irpacket)
+            cmd = irpacket2cmd(irpacket, keymap)
+            if cmd:
+                if time() - lastTimeStamp >= antibound:
+                    send_cmd(cmd)
+                    lastTimeStamp = time()
+            irpacket = b''
+        else:
+            irpacket += rx
+
+def main_PL():
+    # LOOPING: reading packetLength bytes
+    lastTimeStamp = time() # helper to avoid bouncing
+    while True:
+        irpacket  = s.read( packetLength )
+        cmd = irpacket2cmd(irpacket, keymap)
+        if cmd:
+            if time() - lastTimeStamp >= antibound:
+                send_cmd(cmd)
+                lastTimeStamp = time()
+
+def main_TM():
+    # Test mode will save the received bytes to a file so you can analyze them.
+    irpacket = b''
+    while True:
+        rx  = s.read( 1 )
+        print(rx)
+        flog.write(rx)
+
 if __name__ == "__main__":
 
     UHOME = os.path.expanduser("~")
@@ -72,9 +108,6 @@ if __name__ == "__main__":
     if '-h' in sys.argv:
         print(__doc__)
         exit()
-
-    # testing mode to learn new keys
-    test_mode = '-t' in sys.argv
 
     # ecapre services addressing
     try:
@@ -91,28 +124,43 @@ if __name__ == "__main__":
         with open(f'{THISPATH}/ir.config', 'r') as f:
             CFG = yaml.load(f)
             antibound   = CFG['antibound']
-            REMCGF      = CFG['remotes'][ CFG['remote'] ]
-            keymap      = REMCGF['keymap']
-            wlen        = REMCGF['wlength']
-            baudrate, bytesize, parity, stopbits = serial_params(REMCGF)
+            REMCFG      = CFG['remotes'][ CFG['remote'] ]
+            keymap      = REMCFG['keymap']
+            baudrate, bytesize, parity, stopbits = serial_params(REMCFG)
+            packetLength = REMCFG['packetLength']
+            try:
+                endOfPacket = bytes.fromhex(REMCFG['endOfPacket'])
+            except:
+                endOfPacket = None
+
     except:
         print(f'ERROR with \'{THISPATH}/ir.config\'')
         exit()
+
+    # testing mode to learn new keys
+    test_mode = sys.argv[1:] and sys.argv[1] == '-t'
+    if test_mode:
+        if sys.argv[2:]:
+            logfname = f'{sys.argv[2]}'
+            flog = open(logfname, 'wb')
+            print(f'(i) saving to \'{logfname}\'')
+        else:
+            print('-t  missing the log filename')
+            exit()
 
     # Open the IR usb device
     s = serial.Serial( port=CFG['ir_dev'], baudrate=baudrate, bytesize=bytesize,
                        parity=parity, stopbits=stopbits, timeout=None)
     print('Serial open:', s.name, baudrate, bytesize, parity, stopbits)
 
-    # LOOP
-    lastTimeStamp = time()
-    while True:
-        rx  = s.read( wlen )
-        cmd = rx2cmd(rx, keymap)
-        if test_mode:
-            print(rx, cmd)
-            continue
-        if cmd:
-            if time() - lastTimeStamp >= antibound:
-                send_cmd(cmd)
-                lastTimeStamp = time()
+
+    # Go LOOPING
+    if test_mode:
+        main_TM()
+    elif endOfPacket and packetLength:
+        print( 'ERROR: choose endOfPacket OR packetLength on your remote config' )
+    elif endOfPacket:
+        main_EOP()
+    elif packetLength:
+        main_PL()
+
