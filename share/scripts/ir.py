@@ -5,10 +5,10 @@
 
     Usage:
 
-        ir.py [-t]
+        ir.py  [-t logfilename]
 
-        -t  prints out the received bytes so you can
-            map keys <> actions into the file 'ir.config'
+        -t  Learning mode. Prints out the received bytes so you can
+            map "key_bytes: actions" inside the file 'ir.config'
 
 """
 
@@ -16,7 +16,7 @@ import serial
 import sys
 import yaml
 import socket
-from time import time, sleep
+from time import time
 import os
 
 def send_cmd(cmd):
