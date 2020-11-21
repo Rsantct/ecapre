@@ -20,12 +20,12 @@ THIS_PLUGIN_COP_IDXS = eca.get_cop_idxs('L', THIS_PG_NAME)
 ### Eq10 settings for a target curve with room_gain:+6dB and house:-3dB
 fname = f'{UHOME}/ecapre/share/eq/Eq10_target_6-3.yml'
 with open(fname, 'r') as f:
-    PARAMS_6_3 = yaml.load(f)
+    PARAMS_6_3 = yaml.safe_load(f)
 
 ### Eq10 settings for Loudness curve with 13 dB compensation
 fname = f'{UHOME}/ecapre/share/eq/Eq10_loud_compens_+13dB.yml'
 with open(fname, 'r') as f:
-    PARAMS_LOUD13 = yaml.load(f)
+    PARAMS_LOUD13 = yaml.safe_load(f)
 
 def print_Eq10(params):
     line1 = ''
