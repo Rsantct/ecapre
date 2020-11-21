@@ -63,7 +63,7 @@ def print_Eq4p(params):
 def read_Eq4p_yml(fname):
     # loading the YAML --> tmp
     with open(fname, 'r') as f:
-        tmp =  yaml.load(f)
+        tmp =  yaml.safe_load(f)
     # translating mode description to numeric values
     params = {}
     for k in tmp:
