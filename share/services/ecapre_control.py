@@ -43,7 +43,7 @@ import eca_Eq4p_ctrl as Eq4p
 import eca_Eq10_ctrl as Eq10
 
 with open(f'{UHOME}/ecapre/ecapre.config', 'r') as f:
-    CFG = yaml.load(f)
+    CFG = yaml.safe_load(f)
 
 HEADROOM         =  CFG['headroom']
 MIN_LOUD_COMPENS =  CFG['min_loud_compens']
@@ -104,7 +104,7 @@ def set_level(chain, dB, balance):
 def print_state():
 
     with open(STATE_FNAME, 'r') as f:
-        state = yaml.load(f)
+        state = yaml.safe_load(f)
 
     line1 = 'Vol:   vvvv  Bal:   bbbb  Loud: lll'
     line2 = 'Bass:  ssss  Treb:  tttt'
@@ -127,7 +127,7 @@ def restore():
     """
     # Load current status
     with open(STATE_FNAME, 'r') as f:
-        state = yaml.load(f)
+        state = yaml.safe_load(f)
 
     # Mono
     cross_chains( {True:'on', False:'off'}[ state["mono"] ] )
@@ -204,7 +204,7 @@ def process( cmd, arg, relative ):
 
     # Load current status
     with open(STATE_FNAME, 'r') as f:
-        state = yaml.load(f)
+        state = yaml.safe_load(f)
 
     # Get state
     if cmd in ('state','get_state','status'):
