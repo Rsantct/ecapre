@@ -14,7 +14,7 @@ sys.path.append( f'{UHOME}/ecapre/share' )
 import ecanet as eca
 
 with open(f'{UHOME}/ecapre/ecapre.config', 'r') as f:
-    CFG = yaml.load(f)
+    CFG = yaml.safe_load(f)
 
 def isFloat(s):
     try:
