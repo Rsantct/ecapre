@@ -61,7 +61,8 @@ If desired, we can use a FIR convolver for DRC (digital room correction) purpose
 
 We choose **libzita-convolver**, a well known partitioned convolution engine library, by Fons Adriaensen.
 
-    http://kokkinizita.linuxaudio.org/linuxaudio/index.html
+http://kokkinizita.linuxaudio.org/linuxaudio/index.html
+
 
 #### Linux
 
@@ -71,7 +72,7 @@ We choose **libzita-convolver**, a well known partitioned convolution engine lib
 
 #### MacOS
 
-a well known LV2 plugin based on libzita-convolver: [x42/convoLV2](https://github.com/x42/convoLV2)
+A well known LV2 plugin based on libzita-convolver: [x42/convoLV2](https://github.com/x42/convoLV2)
 
 This LV2 plugin needs a host. As per my Ecasound version is unable to load any LV2 plugins, we have chosen [drobilla/jalv](https://github.com/drobilla/jalv) a minimalist LV2 host that runs on Jack.
 
