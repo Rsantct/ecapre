@@ -9,6 +9,8 @@ Modules needed:
 
 Get it from Homebrew
 
+    brew install ecasound
+
 
 ## Jack on MacOS
 
