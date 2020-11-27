@@ -23,7 +23,7 @@ For a more precise, flexible and powerfull audio system, including FIR filtering
 
 The preamp can be controlled via command line, or through by a web page:
 
-<a href="url"><img src="https://github.com/Rsantct/ecapre/blob/master/doc/ecapre%20control%20web.png" align="center" width="640" ></a>
+<a href="url"><img src="https://github.com/Rsantct/ecapre/blob/master/doc/ecapre%20control%20web.png" align="center" width="320" ></a>
 
 
     ~$ ./ecapre/share/services/ecapre_control.py help
