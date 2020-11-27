@@ -1,25 +1,24 @@
-################  ECASOUND CHAINSETUP FILE ######################
+#-------------------------------------------------------------------------------
+#                           ECASOUND CHAINSETUP FILE
+#-------------------------------------------------------------------------------
 
-# GENERAL
-
+# GENERAL:
 -n:"pe.audio.sys" -B:rtlowlatency -X -z:intbuf -z:noxruns -z:nopsr -z:mixmode,avg
 
 # AUDIO INPUTS
--a:L    -f:f32_le,1,48000 -i:jack,,
--a:R    -f:f32_le,1,48000 -i:jack,,
-#-a:L -i:jack,,
-#-a:R -i:jack,,
+-a:L    -f:f32_le,1,48000   -i:jack,,
+-a:R    -f:f32_le,1,48000   -i:jack,,
 
-# AUDIO OUTPUTS
--a:L    -f:f32_le,1,48000 -o:jack,,
--a:R    -f:f32_le,1,48000 -o:jack,,
-#-a:L -o:jack
-#-a:R -o:jack
-
-# CHAIN OPERATORS AND CONTROLLERS
+# AUDIO OUTPUTS:
+-a:L    -f:f32_le,1,48000   -o:jack,,
+-a:R    -f:f32_le,1,48000   -o:jack,,
 
 
-### 1st chain operator: A tone EQ and room gain shelving EQ
+# CHAIN OPERATORS AND CONTROLLERS:
+
+#-------------------------------------------------------------------------------
+#   1st chain operator: A tone EQ and room gain shelving EQ
+#-------------------------------------------------------------------------------
 # 4-band parametric shelving equaliser
 # name: 'C* Eq4p - 4-band parametric shelving equaliser'
 # label: 'Eq4p'
@@ -37,29 +36,36 @@
 -a:R -el:Eq4p
 
 
-
-### 2nd chain operator: A graphic EQ to apply House Curve
+#-------------------------------------------------------------------------------
+#   2nd chain operator: A graphic EQ to apply House Curve
+#-------------------------------------------------------------------------------
 # Eq10: a classic EQ octave band constant Q (~ a grafhic EQ)
 
 -a:L -el:Eq10
 -a:R -el:Eq10
 
 
-
-### 3th chain operator: Loudness compensation EQ curve
+#-------------------------------------------------------------------------------
+#   3th chain operator: Loudness compensation EQ curve
+#-------------------------------------------------------------------------------
 # Eq10: a classic EQ octave band constant Q (~ a grafhic EQ)
 
 -a:L -el:Eq10
 -a:R -el:Eq10
 
 
-### 4th chain operator: Amplify
+#-------------------------------------------------------------------------------
+#   4th chain operator: Amplify
+#-------------------------------------------------------------------------------
 # This is a fixed attenuator to compensate for the
 # internal gain 3.5dB from each Eq10 plugin.
 -a:L    -eadb:-7.0
 -a:R    -eadb:-7.0
 
-### 5th chain operator: Parametric EQ (zita fil ladspa plugin)
+
+#-------------------------------------------------------------------------------
+#   5th chain operator: Parametric EQ (zita fil ladspa plugin)
+#-------------------------------------------------------------------------------
 # name:         '4-band parametric filter'
 # unique ID:    '1970'
 # label:        'Parametric1'
@@ -90,7 +96,9 @@
 -a:R    -el:Parametric1
 
 
-### 6th chain operator: Amplify
+#-------------------------------------------------------------------------------
+#   6th chain operator: Amplify
+#-------------------------------------------------------------------------------
 # An Ecasound integrated preset effect to adjust the preamp level in dB
 # As the wanted 12 dB of HEADROOM, and the wanted -20dB initial level:
 -a:L    -eadb:-32.0
