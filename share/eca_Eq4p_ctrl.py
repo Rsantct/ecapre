@@ -28,12 +28,14 @@ import ecanet as eca
 
 THIS_PG_NAME = 'C* Eq4p - 4-band parametric shelving equaliser'
 
+
 def isFloat(s):
     try:
         float(s)
         return True
     except ValueError:
         return False
+
 
 def print_Eq4p(params):
     COLW = 12
@@ -60,6 +62,7 @@ def print_Eq4p(params):
     print(lQ)
     print(lgain)
 
+
 def read_Eq4p_yml(fname):
     # loading the YAML --> tmp
     with open(fname, 'r') as f:
@@ -73,10 +76,12 @@ def read_Eq4p_yml(fname):
             params[k] = tmp[k]
     return params
 
+
 def bypass_all_Eq4p(bpmode):
     for chain in ('L', 'R'):
         for cop_idx in eca.get_cop_idxs(chain, THIS_PG_NAME):
             eca.set_cop_bypass( chain, cop_idx, bpmode )
+
 
 def set_tone(cop_idx, band='bass', gain=0.0):
     stage = {'bass':'a', 'treble':'d'}[band]
@@ -85,12 +90,21 @@ def set_tone(cop_idx, band='bass', gain=0.0):
         params[f'{stage}.gain (dB)'] = gain
         eca.set_cop(chain, cop_idx, params)
 
+
 def apply_room_gain( cop_idx, room_gain ):
     for chain in ('L','R'):
         params = eca.get_cop( chain, cop_idx )
         # Room gain applied at 'b' section
         params['b.gain (dB)'] = room_gain
         params['b.Q'] = '0.33'
+        eca.set_cop(chain, cop_idx, params)
+
+
+def load_curve(cop_idx, fname):
+    params = read_Eq4p_yml(fname)
+    # rendering
+    for chain in ('L', 'R'):
+        #print(params) # debug
         eca.set_cop(chain, cop_idx, params)
 
 
@@ -111,13 +125,8 @@ if __name__ == '__main__':
 
         # Loading an arbritary curve from a YAML file
         else:
-            Eq4p_fname, cop_idx = sys.argv[1], sys.argv[2]
-            params = read_Eq4p_yml(Eq4p_fname)
-            # rendering
-            for chain in ('L', 'R'):
-                #print(params) # debug
-                eca.set_cop(chain, cop_idx, params)
-
+            fname, cop_idx = sys.argv[1], sys.argv[2]
+            load_curve(cop_idx, fname)
 
     # Printing out the running settigs
     else:
