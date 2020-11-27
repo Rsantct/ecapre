@@ -20,8 +20,8 @@ def ecanet(command):
     return data
 
 def get_cop_idxs(chain, cop_name):
-    """ retrieves the list indexes of a chain operator (aka cop) full name,
-        inside a chain
+    """ retrieves the list indexes used by a full named chain operator (aka cop),
+        inside the given chain
     """
     ecanet( f'c-select {chain}' )
     tmp = ecanet('cop-list').split('\r\n')
@@ -30,7 +30,7 @@ def get_cop_idxs(chain, cop_name):
     try:
         idxs = [i for i in range(len(cops)) if cops[i] == cop_name]
         # ecasound counts from 1 on
-        idxs = [x+1 for x in idxs]
+        idxs = [str(x+1) for x in idxs]
         return idxs
     except:
         return None
