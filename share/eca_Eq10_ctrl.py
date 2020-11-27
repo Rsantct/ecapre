@@ -120,6 +120,24 @@ def upper_end_tuning(params):
                                     '16 kHz': -0.12 * totEq10   }[ k ]
     return params
 
+
+def low_end_tuning(gain31Hz=2.0):
+    """ compensates the Eq10 low end roll-off at 31 Hz band
+    """
+    for chain in 'L', 'R':
+        # iterate sover the Eq10 plugings into the channel chain
+        cops = eca.get_cop_idxs(chain, 'C* Eq10 - 10-band equaliser')
+        for cop in cops:
+            print( f'(eca_Eq10_ctrl) setting {gain31Hz} dB at 31 Hz band on chain:{chain}, Eq10 plugin #{cop} ' )
+            # copp 1 --> 31 Hz band
+            cmds = [f'c-select {chain}',
+                    f'cop-select {cop}',
+                    f'copp-select 1',
+                    f'copp-set {gain31Hz}']
+            for cmd in cmds:
+                eca.ecanet( cmd )
+
+
 if __name__ == '__main__':
 
     if sys.argv[1:]:
