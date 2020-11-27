@@ -1,3 +1,10 @@
+## Python3
+
+Modules needed:
+
+    pip3 install   pyaml JACK-Client
+
+
 ## Jack on MacOS
 
 2020-nov. Homebrew provides Jack1 with Ecasound, but it does not work in Mojave, so uninstall it:
