@@ -29,30 +29,48 @@
         help
 
 """
-
+import jack
 import json
 import yaml
 import sys
 from os.path import expanduser
 
 UHOME=expanduser('~')
-sys.path.append( f'{UHOME}/ecapre/share' )
 
+sys.path.append( f'{UHOME}/ecapre/share' )
 import ecanet        as eca
 import eca_Eq4p_ctrl as Eq4p
 import eca_Eq10_ctrl as Eq10
 
+
 with open(f'{UHOME}/ecapre/ecapre.config', 'r') as f:
     CFG = yaml.safe_load(f)
 
-HEADROOM         =  CFG['headroom']
-MIN_LOUD_COMPENS =  CFG['min_loud_compens']
-MAX_LOUD_COMPENS =  CFG['max_loud_compens']
-TONE_SPAN        =  CFG['tone_span']
-BALANCE_SPAN     =  CFG['balance_span']
-REF_SPL_GAIN     =  CFG['ref_spl_gain']
-STATE_FNAME      =  f'{UHOME}/ecapre/.state.yml'
-PRE_IN_PORTS     =  'convoLV2:in_1', 'convoLV2:in_2'
+JCLI                = jack.Client('ecapre', no_start_server=True)
+HEADROOM            =  CFG['headroom']
+MIN_LOUD_COMPENS    =  CFG['min_loud_compens']
+MAX_LOUD_COMPENS    =  CFG['max_loud_compens']
+TONE_SPAN           =  CFG['tone_span']
+BALANCE_SPAN        =  CFG['balance_span']
+REF_SPL_GAIN        =  CFG['ref_spl_gain']
+STATE_FNAME         =  f'{UHOME}/ecapre/.state.yml'
+PRE_IN_PNAME        =  'loopback'
+
+
+def jconnect(p1, p2, mode='connect'):
+    srcs    = JCLI.get_ports(p1, is_output=True)
+    dests   = JCLI.get_ports(p2, is_input=True)
+    result = True
+    for s, d in zip(srcs, dests):
+        try:
+            if mode == 'connect':
+                JCLI.connect(s, d)
+            elif mode == 'disconnect':
+                JCLI.disconnect(s, d)
+        except:
+            result = False
+    return result
+
 
 def isFloat(s):
     if not s:
@@ -63,43 +81,46 @@ def isFloat(s):
     except ValueError:
         return False
 
+
 def cross_chains(mode):
     if mode == 'on':
-        eca.ecanet( 'jack-connect ecasound:out_1 system:playback_2' )
-        eca.ecanet( 'jack-connect ecasound:out_2 system:playback_1' )
+        eca.ecanet( 'jack-connect    ecasound:out_1 system:playback_2' )
+        eca.ecanet( 'jack-connect    ecasound:out_2 system:playback_1' )
     else:
         eca.ecanet( 'jack-disconnect ecasound:out_1 system:playback_2' )
         eca.ecanet( 'jack-disconnect ecasound:out_2 system:playback_1' )
 
+
 def select_input(input_name):
-    try:
-        target_srcs = CFG["inputs"].remove(input_name)
-    except:
-        target_srcs = CFG["inputs"]
-    # disconnecting
-    for target_src in target_srcs:
-        tar_ports = CFG["inputs"][target_src]
-        tar_ports = [ x.replace(' ', '\ ') for x in tar_ports] # escape spaces
-        eca.ecanet( f'jack-disconnect  {tar_ports[0]}  {PRE_IN_PORTS[0]}' )
-        eca.ecanet( f'jack-disconnect  {tar_ports[1]}  {PRE_IN_PORTS[1]}' )
+
+    # validate
+    if input_name not in CFG["inputs"]:
+        return False
+
+    # disconnecting any port connected to PRE_IN_PNAME
+    preamp_ports = JCLI.get_ports(PRE_IN_PNAME, is_input=True)
+    for preamp_port in preamp_ports:
+        for client in JCLI.get_all_connections(preamp_port):
+            JCLI.disconnect( client, preamp_port )
+
+
     if input_name == 'none':
-        return
+        return True
+
     # connecting
-    try:
-        src_ports = CFG["inputs"][input_name]
-        src_ports = [ x.replace(' ', '\ ') for x in src_ports] # escape spaces
-        eca.ecanet( f'jack-connect  {src_ports[0]}  {PRE_IN_PORTS[0]}' )
-        eca.ecanet( f'jack-connect  {src_ports[1]}  {PRE_IN_PORTS[1]}' )
-    except:
-        pass
+    src = CFG["inputs"][input_name]
+    jconnect( src, PRE_IN_PNAME )
+    return True
+
 
 def set_level(chain, dB, balance):
     """ This acts over the last chain operator -eadb, which works with dB values
     """
     ch_value = dB + REF_SPL_GAIN - HEADROOM + balance/2.0 * {'L':-1, 'R':1}[chain]
-    cmds = [ f'c-select {chain}', f'cop-set {CFG["AMP_COP_IDX"]},1,{str(ch_value)}' ]
+    cmds = [ f'c-select {chain}', f'cop-set {CFG["LEV_COP_IDX"]},1,{str(ch_value)}' ]
     for cmd in cmds:
         eca.ecanet(cmd)
+
 
 def print_state():
 
@@ -121,6 +142,7 @@ def print_state():
     print(line1)
     print(line2)
     print(line3)
+
 
 def restore():
     """ restore last settings from disk file .state.yml
@@ -154,6 +176,7 @@ def restore():
                               room_gain = 0.0,
                               house_atten = -state['house_curve'] )
 
+
 def apply_loudness(state):
     if state['loudness_track']:
         # Setting Loudness level compensation, by following
@@ -165,6 +188,7 @@ def apply_loudness(state):
         Eq10.apply_loudness( CFG['LOUD_COP_IDX'], loud_level )
     else:
         Eq10.apply_loudness( CFG['LOUD_COP_IDX'], 0.0 )
+
 
 def read_command_phrase(command_phrase):
     cmd, arg, relative = '', '', False
@@ -187,12 +211,14 @@ def read_command_phrase(command_phrase):
         pass
     return cmd, arg, relative
 
+
 # Interface function to plug this on server.py
 def do( command_phrase ):
     cmd, arg, relative = read_command_phrase( command_phrase
                                               .replace('\n','').replace('\r','') )
     state = process( cmd, arg, relative )
     return json.dumps(state).encode()
+
 
 # Main function for command processing
 def process( cmd, arg, relative ):
@@ -212,8 +238,10 @@ def process( cmd, arg, relative ):
 
     # Select input
     elif cmd == 'input':
-        select_input( arg )
-        state["input"] = arg
+        if select_input( arg ):
+            state["input"] = arg
+        else:
+            result = 'NACK'
 
     # Get inputs
     elif cmd == 'get_inputs':
@@ -325,6 +353,7 @@ def process( cmd, arg, relative ):
         yaml.dump( state, f, default_flow_style=False )
 
     return result
+
 
 # command line use
 if __name__ == '__main__':
