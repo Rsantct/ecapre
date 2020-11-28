@@ -37,7 +37,8 @@ curl -LO "$gitsite"/ecapre/archive/$branch.zip
 unzip -o $branch.zip
 
 # Move old to keep user files
-mv -f ~/ecapre     ~/ecapre.PREV
+rm -rf  ~/ecapre.PREV                   1>/dev/null 2>&1
+mv -f   ~/ecapre       ~/ecapre.PREV
 
 # Rename downloaded folder
 mv ~/ecapre-$branch ~/ecapre
@@ -56,19 +57,10 @@ touch ~/ecapre/THIS_BRANCH_IS_$branch
 # Removing .zip
 rm -f ~/$branch.zip
 
-# stop server
-pkill -f 'server.py ecapre_control'
-
 # Restoring user files
 cp ~/ecapre.PREV/.state.yml      ~/ecapre
 cp ~/ecapre.PREV/*.config        ~/ecapre
 cp ~/ecapre.PREV/macros/*        ~/ecapre/macros/
-
-# restart server
-python3 ~/ecapre/share/server.py ecapre_control 0.0.0.0 9999
-
-# Deleting OLD
-#rm -rf ~/ecapre.PREV
 
 echo
 echo updated:  "$HOME"/ecapre
