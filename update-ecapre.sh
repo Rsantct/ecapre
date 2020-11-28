@@ -32,7 +32,8 @@ rm -f ~/$branch.zip*                    1>/dev/null 2>&1
 
 # Download project from GitHUb
 curl -LO "$gitsite"/ecapre/archive/$branch.zip
-# Unzip ( ~/DRC-$branch/... )
+
+# Unzip ( ~/ecapre-master/... )
 unzip -o $branch.zip
 
 # Move old to keep user files
@@ -55,8 +56,9 @@ touch ~/ecapre/THIS_BRANCH_IS_$branch
 rm -f ~/$branch.zip
 
 # Restoring user files
-cp ~/ecapre.TMP/.state.yml ~/ecapre
-cp ~/ecapre.TMP/*.config ~/ecapre
+cp ~/ecapre.TMP/.state.yml      ~/ecapre
+cp ~/ecapre.TMP/*.config        ~/ecapre
+cp ~/ecapre.TMP/macros/*        ~/ecapre/macros/
 
 # Deleting OLD
 rm -rf ~/ecapre.TMP
