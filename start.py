@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-
+"""
+    Usage:      start.py   start|stop
+"""
 import sys
 import os
 import subprocess as sp
@@ -9,13 +11,29 @@ import jack
 
 UHOME = os.path.expanduser('~')
 sys.path.append(f'{UHOME}/ecapre/share')
-import eca_Eq10_ctrl as eq10
-import eca_Eq4p_ctrl as eq4p
 
 
 CFILE = f'{UHOME}/ecapre/ecapre.config'
 with open(CFILE, 'r') as f:
     CONFIG = yaml.safe_load(f)
+
+
+def jconnect(p1, p2, mode='connect'):
+    JCLI = jack.Client('tmp', no_start_server=True)
+    srcs    = JCLI.get_ports(p1, is_output=True)
+    dests   = JCLI.get_ports(p2, is_input=True)
+    result = True
+    for s, d in zip(srcs, dests):
+        try:
+            if mode == 'connect':
+                JCLI.connect(s, d)
+            elif mode == 'disconnect':
+                JCLI.disconnect(s, d)
+        except:
+            result = False
+    JCLI.close()
+    return result
+
 
 def killbill():
 
@@ -26,7 +44,7 @@ def killbill():
     # killing the CONTROL and AUX TCP servers
     sp.Popen( "pkill -KILL -f 'server.py ecapre_control'", shell=True)
     sp.Popen( "pkill -KILL -f 'server.py ecapre_aux'", shell=True)
-    # killing any ecasound an jack stuff
+    # killing any Ecasound an Jack stuff
     sp.Popen( "pkill -KILL -f 'jackd'", shell=True)
     sp.Popen( "pkill -KILL -f 'jalv'", shell=True)
     sp.Popen( "pkill -KILL -f 'ecasound'", shell=True)
@@ -75,7 +93,7 @@ def run_jackd(qjackctl=False):
             return False
 
 
-    jopts =  f'-R -d coreaudio'
+    jopts =  f'-R -L 2 -d coreaudio'
     jopts += f' --rate {CONFIG["FS"]} --period {CONFIG["PERIOD_SIZE"]}'
     jopts += f' -P {CONFIG["PBK_DEVICE"]} -o {CONFIG["PBK_PORTS"]}'
     if CONFIG["CAP_PORTS"]:
@@ -106,7 +124,7 @@ def run_jackd(qjackctl=False):
         sp.Popen('/Applications/qjackctl.app/Contents/MacOS/qjackctl', shell=True)
 
 
-# jalv (a LV2 host for jack)
+# jalv (a LV2 host for Jack)
 def run_jalv():
     """ jalv is a LV2 host for
     """
@@ -122,12 +140,26 @@ def run_ecasound():
     ecacmd = f'ecasound --server -s:{UHOME}/ecapre/share/ecapre.ecs'
 
     # We need to provide custom LADSPA path to the ecasound shell:
-    envcmd = 'export LADSPA_PATH=$LADSPA_PATH:"${HOME}"/ecapre/lib/ladspa'
+    envladspa = 'export LADSPA_PATH=$LADSPA_PATH:"${HOME}"/ecapre/lib/ladspa'
+    envlv2    = 'export LV2_PATH="$LV2_PATH":"$HOME"/Library/Audio/Plug-Ins/LV2:/Library/Audio/Plug-Ins/LV2:/usr/local/lib/lv2:/usr/lib/lv2'
 
     # ecasound stdout will not be displayed, only stderr
-    cmd = f'{envcmd} && {ecacmd} 1>/dev/null'
+    cmd = f'{envladspa} && {envlv2} && {ecacmd} 1>/dev/null'
     sp.Popen( cmd, shell=True)
-    sleep(3)
+
+    # wait 5 sec for ecasound to be ready
+    n = 10
+    while n:
+        if not sp.run( 'echo engine-status | nc -c localhost 2868',
+                        shell=True).returncode:
+            break
+        sleep(.5)
+    if not n:
+        raise ValueError('(!) ERROR running ecasoud')
+
+    # Importing custom ecasound modules
+    import eca_Eq10_ctrl as eq10
+    import eca_Eq4p_ctrl as eq4p
 
     # compensates the Eq10 low end roll-off at 31 Hz band, for all Eq10 stages
     eq10.low_end_tuning(cop='all')
@@ -135,23 +167,6 @@ def run_ecasound():
     # Loading Eq4p plugin defaults (for Tones and Room gain)
     eq4p.load_curve( CONFIG["TONE_COP_IDX"],
                      f'{UHOME}/ecapre/share/eq/Eq4p_default.yml' )
-
-
-def jconnect(p1, p2, mode='connect'):
-    jc      = jack.Client('tmp', no_start_server=True)
-    srcs    = jc.get_ports(p1, is_output=True)
-    dests   = jc.get_ports(p2, is_input=True)
-    result = True
-    for s, d in zip(srcs, dests):
-        try:
-            if mode == 'connect':
-                jc.connect(s, d)
-            elif mode == 'disconnect':
-                jc.disconnect(s, d)
-        except:
-            result = False
-    jc.close()
-    return result
 
 
 # Launching the control and aux TCP services
@@ -206,10 +221,10 @@ def close_safari_tabs():
 def run_audio():
 
     # JACK
-    run_jackd(qjackctl=False)
+    run_jackd(qjackctl=True)
 
     # JALV
-    # run_jalv()
+    run_jalv()
 
     # ECASOUND
     run_ecasound()
@@ -220,8 +235,9 @@ def run_audio():
     # Restore last state from disk to Ecasound:
     sp.run( f'{UHOME}/ecapre/share/services/ecapre_control.py restore'.split() )
 
-    # Wiring:
-    jconnect('JackBridge',  'convoLV2')
+    # Wiring (loopback is the preamp entry point, ecasound is the output)
+    jconnect('JackBridge',  'loopback')
+    jconnect('loopback',    'convoLV2')
     jconnect('convoLV2',    'ecasound')
     jconnect('ecasound',    'system')
 
