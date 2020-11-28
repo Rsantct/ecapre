@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-    Usagex:      start.py   start|stop
+    Usage:      start.py   start|stop
 """
 import sys
 import os
