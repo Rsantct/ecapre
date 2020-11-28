@@ -48,6 +48,7 @@ chmod +x ~/ecapre/*.sh                  1>/dev/null 2>&1
 chmod +x ~/ecapre/share/*.py            1>/dev/null 2>&1
 chmod +x ~/ecapre/share/*.sh            1>/dev/null 2>&1
 chmod +x ~/ecapre/share/scripts/*       1>/dev/null 2>&1
+chmod +x ~/ecapre/share/services/*      1>/dev/null 2>&1
 
 # Leaving a dummy file with the installes branch name
 touch ~/ecapre/THIS_BRANCH_IS_$branch
