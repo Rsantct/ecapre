@@ -37,7 +37,7 @@ curl -LO "$gitsite"/ecapre/archive/$branch.zip
 unzip -o $branch.zip
 
 # Move old to keep user files
-mv ~/ecapre ~/ecapre.TMP
+mv ~/ecapre ~/ecapre.PREV
 
 # Rename downloaded folder
 mv ~/ecapre-$branch ~/ecapre
@@ -56,12 +56,12 @@ touch ~/ecapre/THIS_BRANCH_IS_$branch
 rm -f ~/$branch.zip
 
 # Restoring user files
-cp ~/ecapre.TMP/.state.yml      ~/ecapre
-cp ~/ecapre.TMP/*.config        ~/ecapre
-cp ~/ecapre.TMP/macros/*        ~/ecapre/macros/
+cp ~/ecapre.PREV/.state.yml      ~/ecapre
+cp ~/ecapre.PREV/*.config        ~/ecapre
+cp ~/ecapre.PREV/macros/*        ~/ecapre/macros/
 
 # Deleting OLD
-rm -rf ~/ecapre.TMP
+#rm -rf ~/ecapre.PREV
 
 echo
 echo updated:  "$HOME"/ecapre
