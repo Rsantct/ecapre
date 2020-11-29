@@ -20,7 +20,7 @@ def find_convoLV2_drc():
 if __name__ == '__main__':
 
     with open(STATE_FNAME, 'r') as f:
-        state = yaml.load(f)
+        state = yaml.safe_load(f)
 
     drc_set = find_convoLV2_drc()
     if drc_set != '':

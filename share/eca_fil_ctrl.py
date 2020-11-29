@@ -142,7 +142,7 @@ def read_fil_peq_yml_vertical(fname):
     # ---> All parameters can be directly parsed
 
     with open(fname, 'r') as f:
-        return yaml.load(f)
+        return yaml.safe_load(f)
 
 def read_fil_peq_yml_horizontal(fname):
 
@@ -162,7 +162,7 @@ def read_fil_peq_yml_horizontal(fname):
 
     # loading the YAML --> tmp
     with open(fname, 'r') as f:
-        tmp =  yaml.load(f)
+        tmp =  yaml.safe_load(f)
 
     params = {'L':{}, 'R':{}}
 

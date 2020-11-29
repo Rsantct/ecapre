@@ -5,10 +5,10 @@
 
     Usage:
 
-        ir.py  [-t logfilename]
+        ir.py [-t]
 
-        -t  Learning mode. Prints out the received bytes so you can
-            map "key_bytes: actions" inside the file 'ir.config'
+        -t  prints out the received bytes so you can
+            map keys <> actions into the file 'ir.config'
 
 """
 
@@ -16,7 +16,7 @@ import serial
 import sys
 import yaml
 import socket
-from time import time
+from time import time, sleep
 import os
 
 def send_cmd(cmd):
@@ -112,7 +112,7 @@ if __name__ == "__main__":
     # ecapre services addressing
     try:
         with open(f'{UHOME}/ecapre/ecapre.config', 'r') as f:
-            eca = yaml.load(f)
+            eca = yaml.safe_load(f)
             CTL_HOST, CTL_PORT = eca['control_addr'], eca['control_port']
             AUX_HOST, AUX_PORT = eca['aux_addr'], eca['aux_port']
     except:
@@ -122,7 +122,7 @@ if __name__ == "__main__":
     # IR config file
     try:
         with open(f'{THISPATH}/ir.config', 'r') as f:
-            CFG = yaml.load(f)
+            CFG = yaml.safe_load(f)
             antibound   = CFG['antibound']
             REMCFG      = CFG['remotes'][ CFG['remote'] ]
             keymap      = REMCFG['keymap']
@@ -163,4 +163,8 @@ if __name__ == "__main__":
         main_EOP()
     elif packetLength:
         main_PL()
+
+
+
+
 
