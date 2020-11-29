@@ -94,7 +94,7 @@ def cross_chains(mode):
 def select_input(input_name):
 
     # validate
-    if input_name not in CFG["inputs"]:
+    if input_name != 'none' and input_name not in CFG["inputs"]:
         return False
 
     # disconnecting any port connected to PRE_IN_PNAME
